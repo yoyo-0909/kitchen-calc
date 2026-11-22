@@ -1,5 +1,9 @@
 # Kitchen Calc
 
+<p align="center">
+  <img src="./assets/kitchen-calc-banner.svg" alt="Kitchen Calc — Smart calculations for everyday cooking" width="100%" />
+</p>
+
 A focused, browser-based kitchen companion for recipe scaling, ingredient organization, shopping preparation, cooking timers, and measurement conversion.
 
 <p align="center">
