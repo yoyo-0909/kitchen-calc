@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Calc — Smart Recipe Scaler & Kitchen Management Suite</title>
+  <!-- Tailwind CSS via CDN for responsive utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            paprika: {
+              50: '#fff5f3',
+              100: '#ffe8e5',
+              200: '#ffd6d0',
+              300: '#ffb6ab',
+              400: '#ff8471',
+              500: '#f05339',
+              600: '#dc371d',
+              700: '#b92812',
+              800: '#942211',
+              900: '#792013',
+            },
+            amberchef: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            },
+            terracotta: {
+              500: '#c2410c',
+              600: '#9a3412',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes subtle-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    @keyframes shake-err {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    .shake-animation {
+      animation: shake-err 0.35s ease-in-out;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(240, 83, 57, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(240, 83, 57, 0.65);
+    }
+    /* Dynamic Font Sizing for Accessibility */
+    body.font-size-large {
+      font-size: 1.125rem;
+    }
+    body.font-size-xlarge {
+      font-size: 1.25rem;
+    }
+    /* High Contrast Mode */
+    body.high-contrast {
+      filter: contrast(135%);
+    }
+    body.high-contrast * {
+      border-color: #000 !important;
+    }
+    .dark.high-contrast * {
+      border-color: #fff !important;
+    }
+    .tab-active {
+      border-bottom: 3px solid #f05339;
+      color: #f05339;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-800 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-200 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- TOP APP HEADER & BRANDING -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 shadow-xs transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Kitchen Calc Logo & Brand -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('scaler')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-paprika-600 via-amberchef-600 to-terracotta-500 flex items-center justify-center text-white shadow-md shadow-paprika-500/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-paprika-600 via-amberchef-600 to-terracotta-600 bg-clip-text text-transparent">
+              Kitchen Calc
+            </h1>
+            <p class="text-xs text-stone-500 dark:text-stone-400 font-medium hidden sm:block">Smart Recipe Scaler & Kitchen Management Suite</p>
+          </div>
+        </div>
+
+        <!-- Right Utility Controls -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          
+          <!-- Offline Status Pill -->
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-xs" title="Runs 100% in browser without external internet or backend!">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+            <span class="hidden sm:inline">100% Offline Mode</span>
+            <span class="sm:hidden">Offline</span>
+          </span>
+
+          <!-- Kitchen Timers Quick Switch -->
+          <button onclick="switchTab('cooking')" class="relative p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors" title="Kitchen Timers">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span id="activeTimerBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-paprika-600 text-white rounded-full text-[10px] font-bold flex items-center justify-center">0</span>
+          </button>
+
+          <!-- Accessibility Settings Trigger -->
+          <button onclick="toggleModal('accessibilityModal', true)" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors" title="Accessibility & Font Scaling">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </button>
+
+          <!-- Dark/Light Theme Switcher -->
+          <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-amberchef-600 dark:text-amberchef-400 transition-colors" title="Toggle Theme">
+            <svg id="themeIconSun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <svg id="themeIconMoon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 no-scrollbar border-t border-stone-100 dark:border-stone-800 text-sm" aria-label="Main Navigation">
+        <button onclick="switchTab('scaler')" id="tabBtn-scaler" class="tab-button tab-active whitespace-nowrap px-3.5 py-2 font-bold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>⚖️</span>
+          <span>Kitchen Calc</span>
+        </button>
+        <button onclick="switchTab('library')" id="tabBtn-library" class="tab-button text-stone-600 dark:text-stone-300 hover:text-paprika-600 dark:hover:text-paprika-400 whitespace-nowrap px-3.5 py-2 font-semibold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>📚</span>
+          <span>10,000+ Recipes</span>
+        </button>
+        <button onclick="switchTab('pantry')" id="tabBtn-pantry" class="tab-button text-stone-600 dark:text-stone-300 hover:text-paprika-600 dark:hover:text-paprika-400 whitespace-nowrap px-3.5 py-2 font-semibold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>🧊</span>
+          <span>Smart Pantry & Expiry</span>
+        </button>
+        <button onclick="switchTab('shopping')" id="tabBtn-shopping" class="tab-button text-stone-600 dark:text-stone-300 hover:text-paprika-600 dark:hover:text-paprika-400 whitespace-nowrap px-3.5 py-2 font-semibold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>🛒</span>
+          <span>Shopping & Delivery</span>
+        </button>
+        <button onclick="switchTab('cooking')" id="tabBtn-cooking" class="tab-button text-stone-600 dark:text-stone-300 hover:text-paprika-600 dark:hover:text-paprika-400 whitespace-nowrap px-3.5 py-2 font-semibold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>👨‍🍳</span>
+          <span>Cooking & Timers</span>
+        </button>
+        <button onclick="switchTab('converter')" id="tabBtn-converter" class="tab-button text-stone-600 dark:text-stone-300 hover:text-paprika-600 dark:hover:text-paprika-400 whitespace-nowrap px-3.5 py-2 font-semibold rounded-xl flex items-center space-x-1.5 transition-all">
+          <span>📐</span>
+          <span>Unit Converter</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Toast Notification Hub (Zero alert() usage) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full px-4"></div>
+
+  <!-- Confirmation Modal System (Zero confirm() usage) -->
+  <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-xs hidden p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200 dark:border-stone-800">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-amberchef-100 dark:bg-amberchef-900/50 text-amberchef-600 dark:text-amberchef-400 flex items-center justify-center font-bold text-lg">
+          ⚠️
+        </div>
+        <h3 id="confirmModalTitle" class="text-lg font-bold text-stone-900 dark:text-white">Confirmation</h3>
+      </div>
+      <p id="confirmModalMessage" class="text-stone-600 dark:text-stone-300 text-sm mb-6 leading-relaxed">
+        Are you sure you want to proceed?
+      </p>
+      <div class="flex justify-end space-x-3">
+        <button id="confirmModalCancelBtn" class="px-4 py-2 rounded-xl text-sm font-semibold text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors">
+          Cancel
+        </button>
+        <button id="confirmModalActionBtn" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-paprika-600 hover:bg-paprika-700 shadow-md transition-colors">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessibility Modal -->
+  <div id="accessibilityModal" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-xs hidden p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200 dark:border-stone-800">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-stone-900 dark:text-white flex items-center gap-2">
+          <span>👓</span> Accessibility Settings
+        </h3>
+        <button onclick="toggleModal('accessibilityModal', false)" class="text-stone-400 hover:text-stone-600 text-xl font-bold">✕</button>
+      </div>
+      <div class="space-y-5">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Display Font Scaling</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setFontScale('normal')" class="py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 font-semibold hover:border-paprika-500">Normal</button>
+            <button onclick="setFontScale('large')" class="py-2 text-base rounded-xl border border-stone-300 dark:border-stone-700 font-semibold hover:border-paprika-500">Large</button>
+            <button onclick="setFontScale('xlarge')" class="py-2 text-lg rounded-xl border border-stone-300 dark:border-stone-700 font-semibold hover:border-paprika-500">Extra</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-3 border-t border-stone-200 dark:border-stone-800">
+          <div>
+            <span class="font-medium text-sm block">High Contrast Mode</span>
+            <span class="text-xs text-stone-500">Sharpens borders and boosts visibility</span>
+          </div>
+          <button id="toggleHighContrastBtn" onclick="toggleHighContrast()" class="w-12 h-6 rounded-full bg-stone-300 dark:bg-stone-700 relative p-1 transition-colors">
+            <div id="highContrastKnob" class="w-4 h-4 rounded-full bg-white transition-transform"></div>
+          </button>
+        </div>
+        <div class="flex items-center justify-between pt-3 border-t border-stone-200 dark:border-stone-800">
+          <div>
+            <span class="font-medium text-sm block">Fractional Quantities</span>
+            <span class="text-xs text-stone-500">Show 1 ½, ¼ cups instead of 1.50</span>
+          </div>
+          <button id="toggleFractionBtn" onclick="toggleFractionPreference()" class="w-12 h-6 rounded-full bg-paprika-600 relative p-1 transition-colors">
+            <div id="fractionKnob" class="w-4 h-4 rounded-full bg-white translate-x-6 transition-transform"></div>
+          </button>
+        </div>
+      </div>
+      <div class="mt-6 text-right">
+        <button onclick="toggleModal('accessibilityModal', false)" class="px-5 py-2 rounded-xl text-sm font-semibold bg-paprika-600 hover:bg-paprika-700 text-white">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Global Expiry Warning Alert -->
+    <div id="expiryWarningBanner" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 shadow-xs flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div>
+          <p class="font-bold text-sm text-amber-900 dark:text-amber-200">Attention: Expiring Kitchen Inventory!</p>
+          <p id="expiryWarningText" class="text-xs text-amber-800 dark:text-amber-300">You have items nearing expiry. Check them before they spoil!</p>
+        </div>
+      </div>
+      <button onclick="switchTab('pantry')" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white">
+        View Pantry
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: KITCHEN CALC (Core Recipe Scaler)   -->
+    <!-- ========================================== -->
+    <section id="tabSection-scaler" class="tab-pane space-y-8">
+      
+      <!-- Hero Banner -->
+      <div class="text-center max-w-3xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-paprika-100 dark:bg-paprika-950/60 text-paprika-700 dark:text-paprika-300 text-xs font-bold uppercase tracking-wider">
+          <span>🔥</span> Precision Culinary Calculation Engine
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white tracking-tight">
+          Kitchen Calc
+        </h2>
+        <p class="text-stone-600 dark:text-stone-400 text-sm sm:text-base">
+          Multiply or divide any recipe for dinner parties, meal prep, or solo dining. Enter your servings, adjust ingredient quantities, and get accurate, clean culinary measurements instantly.
+        </p>
+      </div>
+
+      <!-- Main Scaler Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Input Form Card -->
+        <div class="lg:col-span-7 bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-stone-200 dark:border-stone-800 transition-all">
+          <div class="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-stone-800 mb-6">
+            <div class="flex items-center space-x-2">
+              <span class="text-xl">📝</span>
+              <h3 class="text-lg font-bold text-stone-900 dark:text-white">Recipe Parameters</h3>
+            </div>
+            <button type="button" onclick="confirmResetScalerForm()" class="text-xs font-semibold text-stone-400 hover:text-paprika-600 dark:hover:text-paprika-400 transition-colors flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              Reset Form
+            </button>
+          </div>
+
+          <form id="scalerForm" onsubmit="handleScaleSubmit(event)" novalidate class="space-y-6">
+            
+            <!-- Dish Name Field -->
+            <div>
+              <label for="recipeDishName" class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300 mb-2">
+                Dish Name <span class="text-paprika-500">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="recipeDishName" 
+                name="recipeDishName" 
+                placeholder="e.g. Grandma's Classic Lasagna Bolognese" 
+                class="w-full px-4 py-3.5 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-paprika-500 focus:border-paprika-500 text-sm font-medium transition-all"
+                required
+              />
+              <p id="error-recipeDishName" class="hidden text-xs text-red-500 font-semibold mt-1.5 flex items-center gap-1">
+                Please provide a valid dish name.
+              </p>
+            </div>
+
+            <!-- Servings Grid with Steppers -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Original Servings -->
+              <div>
+                <label for="originalServings" class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300 mb-2">
+                  Original Servings <span class="text-paprika-500">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <button type="button" onclick="adjustServingInput('originalServings', -1)" class="absolute left-2 w-8 h-8 rounded-xl bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center justify-center font-bold hover:bg-stone-300 transition-colors">-</button>
+                  <input 
+                    type="number" 
+                    id="originalServings" 
+                    name="originalServings" 
+                    min="0.1" 
+                    step="any" 
+                    placeholder="4" 
+                    value="4" 
+                    class="w-full text-center py-3.5 px-10 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white font-bold text-base focus:ring-2 focus:ring-paprika-500"
+                    required
+                  />
+                  <button type="button" onclick="adjustServingInput('originalServings', 1)" class="absolute right-2 w-8 h-8 rounded-xl bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center justify-center font-bold hover:bg-stone-300 transition-colors">+</button>
+                </div>
+                <p id="error-originalServings" class="hidden text-xs text-red-500 font-semibold mt-1.5">Must be greater than 0.</p>
+              </div>
+
+              <!-- Desired Servings -->
+              <div>
+                <label for="desiredServings" class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300 mb-2">
+                  Desired Servings <span class="text-paprika-500">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <button type="button" onclick="adjustServingInput('desiredServings', -1)" class="absolute left-2 w-8 h-8 rounded-xl bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center justify-center font-bold hover:bg-stone-300 transition-colors">-</button>
+                  <input 
+                    type="number" 
+                    id="desiredServings" 
+                    name="desiredServings" 
+                    min="0.1" 
+                    step="any" 
+                    placeholder="8" 
+                    value="8" 
+                    class="w-full text-center py-3.5 px-10 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white font-bold text-base focus:ring-2 focus:ring-paprika-500"
+                    required
+                  />
+                  <button type="button" onclick="adjustServingInput('desiredServings', 1)" class="absolute right-2 w-8 h-8 rounded-xl bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center justify-center font-bold hover:bg-stone-300 transition-colors">+</button>
+                </div>
+                <p id="error-desiredServings" class="hidden text-xs text-red-500 font-semibold mt-1.5">Must be greater than 0.</p>
+              </div>
+            </div>
+
+            <!-- Ingredient Rows Container -->
+            <div class="pt-4 border-t border-stone-100 dark:border-stone-800">
+              <div class="flex items-center justify-between mb-3">
+                <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">
+                  Ingredients List <span class="text-stone-400 font-normal">(Name, Quantity & Unit)</span>
+                </label>
+                <span class="text-xs text-stone-500" id="ingredientCountLabel">3 ingredients</span>
+              </div>
+
+              <div id="ingredientRowsContainer" class="space-y-3">
+                <!-- Dynamically rendered rows -->
+              </div>
+
+              <!-- Add Ingredient Row -->
+              <div class="mt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onclick="addIngredientRow('', '', 'g')" 
+                  class="flex-1 py-2.5 px-4 rounded-xl border border-dashed border-stone-300 dark:border-stone-700 hover:border-paprika-500 text-stone-600 dark:text-stone-300 hover:text-paprika-600 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                  + Add Another Ingredient
+                </button>
+              </div>
+            </div>
+
+            <!-- Submit Button with Kitchen Calc Action -->
+            <div class="pt-2">
+              <button 
+                type="submit" 
+                id="scaleRecipeBtn" 
+                class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-paprika-600 via-amberchef-600 to-terracotta-600 hover:opacity-95 text-white font-black text-base shadow-lg shadow-paprika-500/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                Scale Recipe with Kitchen Calc
+              </button>
+              <p class="text-center text-[11px] text-stone-400 mt-2">
+                Formula: New Quantity = Original Quantity × Desired Servings ÷ Original Servings
+              </p>
+            </div>
+          </form>
+
+          <!-- Quick Load Preload Sample Chips -->
+          <div class="mt-6 pt-4 border-t border-stone-100 dark:border-stone-800">
+            <span class="text-xs font-semibold text-stone-500 block mb-2">Try with Quick Demo Recipes:</span>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="loadSampleRecipe('lasagna')" class="px-2.5 py-1 text-xs rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 font-medium transition-colors">
+                🇮🇹 Lasagna (4 Servings)
+              </button>
+              <button type="button" onclick="loadSampleRecipe('paneer')" class="px-2.5 py-1 text-xs rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 font-medium transition-colors">
+                🇮🇳 Paneer Butter Masala (3 Servings)
+              </button>
+              <button type="button" onclick="loadSampleRecipe('bourguignon')" class="px-2.5 py-1 text-xs rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 font-medium transition-colors">
+                🇫🇷 Beef Bourguignon (6 Servings)
+              </button>
+              <button type="button" onclick="loadSampleRecipe('sambar')" class="px-2.5 py-1 text-xs rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 font-medium transition-colors">
+                🍛 South Indian Sambar (5 Servings)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Column -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Idle Prompt -->
+          <div id="resultsPendingState" class="bg-white dark:bg-stone-900 rounded-3xl p-8 text-center border border-dashed border-stone-300 dark:border-stone-800 space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-paprika-50 dark:bg-paprika-950/50 text-paprika-500 mx-auto flex items-center justify-center text-3xl">
+              🥘
+            </div>
+            <h4 class="text-base font-bold text-stone-800 dark:text-stone-200">Ready to Calculate</h4>
+            <p class="text-xs text-stone-500 dark:text-stone-400 max-w-xs mx-auto leading-relaxed">
+              Enter ingredients and target servings, then click <span class="font-bold text-paprika-600">Scale Recipe with Kitchen Calc</span> to see scaled portions.
+            </p>
+          </div>
+
+          <!-- Stale Input Warning Banner -->
+          <div id="resultsStaleBanner" class="hidden p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-center gap-2">
+            <span>✏️</span>
+            <span>Inputs modified! Click <strong>Scale Recipe with Kitchen Calc</strong> to recalculate quantities.</span>
+          </div>
+
+          <!-- Active Results Card -->
+          <div id="resultsActiveCard" class="hidden bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 shadow-xl border-2 border-paprika-500/30 dark:border-paprika-500/20 space-y-6">
+            
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-paprika-600 bg-paprika-50 dark:bg-paprika-950/80 px-2.5 py-1 rounded-full">
+                  Kitchen Calc Output
+                </span>
+                <h3 id="resultDishTitle" class="text-2xl font-black text-stone-900 dark:text-white mt-2">
+                  Grandma's Classic Lasagna Bolognese
+                </h3>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold text-stone-400 uppercase tracking-wider block">Scale Factor</span>
+                <span id="resultScaleFactor" class="text-lg font-black text-amberchef-600 dark:text-amberchef-400">2.00×</span>
+              </div>
+            </div>
+
+            <!-- Servings Comparison Banner -->
+            <div class="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 text-center">
+              <div>
+                <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">Original Servings</span>
+                <span id="resultOrigServings" class="text-xl font-black text-stone-700 dark:text-stone-300">4</span>
+              </div>
+              <div class="border-l border-stone-200 dark:border-stone-700">
+                <span class="text-[11px] font-bold text-paprika-600 uppercase tracking-wider block">Target Servings</span>
+                <span id="resultTargetServings" class="text-xl font-black text-paprika-600">8</span>
+              </div>
+            </div>
+
+            <!-- Scaled Ingredients Table -->
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3 flex items-center justify-between">
+                <span>Updated Ingredient Ratios</span>
+                <span class="text-[10px] text-stone-400 font-normal">Original ➔ New</span>
+              </h4>
+              <div id="resultIngredientsList" class="space-y-2.5">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Action Buttons for Scaled Recipe -->
+            <div class="pt-4 border-t border-stone-100 dark:border-stone-800 space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="sendScaledToCookingMode()" class="py-2.5 px-3 rounded-xl bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-sm">
+                  <span>👨‍🍳</span> Cook This Now
+                </button>
+                <button type="button" onclick="sendMissingToShoppingList()" class="py-2.5 px-3 rounded-xl bg-paprika-50 dark:bg-paprika-950/60 text-paprika-600 dark:text-paprika-400 font-bold text-xs hover:bg-paprika-100 border border-paprika-200 dark:border-paprika-800 transition-colors flex items-center justify-center gap-1.5">
+                  <span>🛒</span> Add to Shopping
+                </button>
+              </div>
+              <button type="button" onclick="copyScaledRecipeToClipboard()" class="w-full py-2 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-semibold text-xs hover:bg-stone-200 transition-colors flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                Copy Recipe Text to Clipboard
+              </button>
+            </div>
+          </div>
+
+          <!-- Chef Insights Card -->
+          <div class="bg-gradient-to-br from-amberchef-50 to-paprika-50 dark:from-stone-900 dark:to-stone-900/90 rounded-3xl p-6 border border-amberchef-200/60 dark:border-stone-800 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">💡</span>
+              <h4 class="text-sm font-bold text-stone-900 dark:text-white">Kitchen Calc Scaling Advice</h4>
+            </div>
+            <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-2 list-disc list-inside leading-relaxed">
+              <li><strong>Spices & Aromatics:</strong> Scale pungency cautiously (1.5× instead of 2×) when doubling recipes.</li>
+              <li><strong>Pan Surface Area:</strong> Pan evaporation rate stays fixed if skillet size is identical; avoid excess reduction liquids.</li>
+              <li><strong>Leavening Agents:</strong> Baking powder and yeast increase volume exponentially, so increase by 1.3× to 1.5× for 2× servings.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: 10,000+ RECIPES LIBRARY & EXPLORER  -->
+    <!-- ========================================== -->
+    <section id="tabSection-library" class="tab-pane hidden space-y-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amberchef-100 dark:bg-amberchef-950/60 text-amberchef-700 dark:text-amberchef-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>🌐</span> Global Culinary Library
+          </div>
+          <h2 class="text-3xl font-extrabold text-stone-900 dark:text-white">10,000+ Recipe Library</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Continental, Italian, North & South Indian, Asian, and Mexican recipes. Click any card to scale instantly in Kitchen Calc.
+          </p>
+        </div>
+
+        <button onclick="toggleModal('aiDietModal', true)" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-paprika-600 via-amberchef-600 to-terracotta-600 text-white font-bold text-xs sm:text-sm shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-2">
+          <span>✨</span> Offline AI Culinary Advisor
+        </button>
+      </div>
+
+      <!-- Filters Console -->
+      <div class="bg-white dark:bg-stone-900 rounded-3xl p-5 sm:p-6 shadow-lg border border-stone-200 dark:border-stone-800 space-y-4">
+        
+        <!-- Search Input -->
+        <div class="relative">
+          <input 
+            type="text" 
+            id="recipeSearchInput" 
+            oninput="handleRecipeSearch()" 
+            placeholder="Search by recipe, cuisine, or ingredients (e.g. Risotto, Paneer, Chicken, Garlic)..."
+            class="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm focus:ring-2 focus:ring-paprika-500 transition-all text-stone-900 dark:text-white"
+          />
+          <div class="absolute left-4 top-3.5 text-stone-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <button id="clearSearchBtn" onclick="clearRecipeSearch()" class="hidden absolute right-4 top-3.5 text-stone-400 hover:text-stone-600 text-sm font-bold">✕</button>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="space-y-3 pt-2">
+          <!-- Cuisine Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+            <span class="font-bold text-stone-400 shrink-0">Cuisine:</span>
+            <button onclick="setLibraryCuisineFilter('all')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-bold bg-paprika-600 text-white shadow-xs" data-cuisine="all">All (10,000+)</button>
+            <button onclick="setLibraryCuisineFilter('continental')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="continental">🇫🇷 Continental</button>
+            <button onclick="setLibraryCuisineFilter('italian')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="italian">🇮🇹 Italian</button>
+            <button onclick="setLibraryCuisineFilter('north_indian')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="north_indian">🇮🇳 North Indian</button>
+            <button onclick="setLibraryCuisineFilter('south_indian')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="south_indian">🍛 South Indian</button>
+            <button onclick="setLibraryCuisineFilter('asian')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="asian">🥢 Asian Wok</button>
+            <button onclick="setLibraryCuisineFilter('mexican')" class="cuisine-filter-btn px-3 py-1.5 rounded-xl font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200" data-cuisine="mexican">🌮 Mexican</button>
+          </div>
+
+          <!-- Diets & Allergies -->
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-bold text-stone-400">Diet & Allergy:</span>
+            <label class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 cursor-pointer select-none">
+              <input type="checkbox" id="dietVeg" onchange="filterLibraryCards()" class="rounded text-paprika-600 focus:ring-0">
+              <span>🌱 Vegetarian</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 cursor-pointer select-none">
+              <input type="checkbox" id="dietVegan" onchange="filterLibraryCards()" class="rounded text-paprika-600 focus:ring-0">
+              <span>🌿 Vegan</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 cursor-pointer select-none">
+              <input type="checkbox" id="dietGlutenFree" onchange="filterLibraryCards()" class="rounded text-paprika-600 focus:ring-0">
+              <span>🌾 Gluten-Free</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 cursor-pointer select-none">
+              <input type="checkbox" id="dietNutFree" onchange="filterLibraryCards()" class="rounded text-paprika-600 focus:ring-0">
+              <span>🥜 Nut-Free</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 cursor-pointer select-none">
+              <input type="checkbox" id="dietDairyFree" onchange="filterLibraryCards()" class="rounded text-paprika-600 focus:ring-0">
+              <span>🥛 Dairy-Free</span>
+            </label>
+          </div>
+
+          <!-- Cook Time Slider -->
+          <div class="flex items-center gap-4 text-xs pt-2">
+            <span class="font-bold text-stone-400">Max Cook Time:</span>
+            <input type="range" id="prepTimeSlider" min="15" max="120" step="15" value="120" oninput="updateTimeSliderDisplay(this.value)" class="w-40 accent-paprika-600">
+            <span id="timeSliderValue" class="font-bold text-stone-700 dark:text-stone-300">Any Time (≤ 120 mins)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recipe Cards Grid -->
+      <div id="recipeCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between bg-white dark:bg-stone-900 rounded-2xl p-4 border border-stone-200 dark:border-stone-800">
+        <span id="libraryResultCount" class="text-xs text-stone-500 font-semibold">Showing 1-12 of 10,000+ recipes</span>
+        <div class="flex items-center gap-2">
+          <button id="prevLibraryPageBtn" onclick="changeLibraryPage(-1)" class="px-3 py-1.5 rounded-xl border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 disabled:opacity-40 transition-colors">
+            Previous
+          </button>
+          <span id="currentLibraryPageText" class="text-xs font-bold px-2 text-paprika-600">Page 1</span>
+          <button id="nextLibraryPageBtn" onclick="changeLibraryPage(1)" class="px-3 py-1.5 rounded-xl border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 disabled:opacity-40 transition-colors">
+            Next
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: SMART PANTRY & EXPIRATION DASHBOARD -->
+    <!-- ========================================== -->
+    <section id="tabSection-pantry" class="tab-pane hidden space-y-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>🧊</span> Zero Waste Kitchen Monitor
+          </div>
+          <h2 class="text-3xl font-extrabold text-stone-900 dark:text-white">Smart Kitchen Inventory</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Track ingredients, watch expiration dates, and cook with items before they spoil.
+          </p>
+        </div>
+
+        <button onclick="toggleModal('addPantryItemModal', true)" class="px-4 py-2.5 rounded-2xl bg-paprika-600 hover:bg-paprika-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Add Pantry Item
+        </button>
+      </div>
+
+      <!-- Inventory KPI Status Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200 dark:border-stone-800 shadow-xs">
+          <span class="text-xs font-bold text-stone-400 uppercase">Total Items</span>
+          <p id="pantryStatTotal" class="text-2xl font-black text-stone-900 dark:text-white mt-1">0</p>
+        </div>
+        <div class="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-800 shadow-xs">
+          <span class="text-xs font-bold text-emerald-600 uppercase">Fresh & Good</span>
+          <p id="pantryStatFresh" class="text-2xl font-black text-emerald-600 mt-1">0</p>
+        </div>
+        <div class="bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-5 border border-amber-200 dark:border-amber-800 shadow-xs">
+          <span class="text-xs font-bold text-amber-600 uppercase">Expiring in ≤ 3 Days</span>
+          <p id="pantryStatSoon" class="text-2xl font-black text-amber-600 mt-1">0</p>
+        </div>
+        <div class="bg-red-50/50 dark:bg-red-950/20 rounded-2xl p-5 border border-red-200 dark:border-red-800 shadow-xs">
+          <span class="text-xs font-bold text-red-600 uppercase">Expired</span>
+          <p id="pantryStatExpired" class="text-2xl font-black text-red-600 mt-1">0</p>
+        </div>
+      </div>
+
+      <!-- "What Can I Cook Right Now?" Meal Planner -->
+      <div class="bg-gradient-to-r from-paprika-500/10 via-amberchef-500/10 to-transparent p-6 rounded-3xl border border-paprika-200 dark:border-paprika-900/50">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">🪄</span>
+            <div>
+              <h3 class="font-extrabold text-base sm:text-lg text-stone-900 dark:text-white">"What Can I Cook Now?" Meal Planner</h3>
+              <p class="text-xs text-stone-500">Auto-suggested recipes prioritized by ingredients currently in your pantry.</p>
+            </div>
+          </div>
+          <button onclick="refreshPantrySuggestions()" class="text-xs font-bold text-paprika-600 hover:text-paprika-700">Refresh</button>
+        </div>
+        <div id="pantrySuggestedRecipesGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- Suggested recipe cards -->
+        </div>
+      </div>
+
+      <!-- Current Pantry Items Table -->
+      <div class="bg-white dark:bg-stone-900 rounded-3xl shadow-lg border border-stone-200 dark:border-stone-800 overflow-hidden">
+        <div class="p-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between">
+          <h3 class="font-bold text-stone-900 dark:text-white text-base">Current Pantry Items</h3>
+          <span class="text-xs text-stone-400">Updates dynamically</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-stone-50 dark:bg-stone-800/50 text-stone-500 text-xs uppercase font-bold tracking-wider">
+              <tr>
+                <th class="py-3 px-6">Item</th>
+                <th class="py-3 px-6">Category</th>
+                <th class="py-3 px-6">Quantity</th>
+                <th class="py-3 px-6">Expiry Date</th>
+                <th class="py-3 px-6">Freshness</th>
+                <th class="py-3 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pantryTableBody" class="divide-y divide-stone-100 dark:divide-stone-800">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: SHOPPING & QUICK-COMMERCE DELIVERY  -->
+    <!-- ========================================== -->
+    <section id="tabSection-shopping" class="tab-pane hidden space-y-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>🛒</span> Kitchen Shopping Mode
+          </div>
+          <h2 class="text-3xl font-extrabold text-stone-900 dark:text-white">Smart Grocery & Quick Delivery</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Generate shopping lists from Kitchen Calc scaled recipes, check them off as you shop, or order in minutes via local delivery.
+          </p>
+        </div>
+
+        <button onclick="clearCompletedShoppingItems()" class="text-xs font-bold text-stone-500 hover:text-paprika-600 transition-colors">
+          Clear Checked Items
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Checklist Column -->
+        <div class="lg:col-span-7 bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 shadow-lg border border-stone-200 dark:border-stone-800 space-y-5">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+            <h3 class="font-bold text-stone-900 dark:text-white text-base">Grocery Checklist</h3>
+            <span id="shoppingCountLabel" class="text-xs font-semibold text-stone-400">0 items</span>
+          </div>
+
+          <!-- Add Item Form -->
+          <form onsubmit="handleCustomShoppingItem(event)" class="flex gap-2">
+            <input 
+              type="text" 
+              id="customShoppingItemInput" 
+              placeholder="Add item (e.g., San Marzano Tomatoes 800g)..." 
+              class="flex-1 px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm focus:ring-2 focus:ring-paprika-500 text-stone-900 dark:text-white"
+              required
+            />
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-paprika-600 hover:bg-paprika-700 text-white font-bold text-xs sm:text-sm shrink-0">
+              + Add
+            </button>
+          </form>
+
+          <!-- Shopping List Items Container -->
+          <div id="shoppingItemsList" class="space-y-2 max-h-[450px] overflow-y-auto pr-1">
+            <!-- Rendered items -->
+          </div>
+        </div>
+
+        <!-- Quick Commerce Delivery Hub -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-white to-stone-50 dark:from-stone-900 dark:to-stone-950 rounded-3xl p-6 sm:p-7 shadow-lg border border-stone-200 dark:border-stone-800 space-y-6">
+          
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xl">⚡</span>
+              <h3 class="font-extrabold text-stone-900 dark:text-white text-lg">Instant Delivery Launcher</h3>
+            </div>
+            <p class="text-xs text-stone-500 leading-relaxed">
+              Order your ingredient list right away. One click copies your grocery cart and opens your chosen quick-commerce app.
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Swiggy Instamart -->
+            <button onclick="launchQuickCommerce('instamart')" class="w-full p-4 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-between group">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg font-black">S</span>
+                <div class="text-left">
+                  <p class="font-bold">Swiggy Instamart</p>
+                  <p class="text-[11px] text-orange-100 font-normal">Fast 10-15 min grocery delivery</p>
+                </div>
+              </div>
+              <span class="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:translate-x-1 transition-transform">Order ➔</span>
+            </button>
+
+            <!-- Blinkit -->
+            <button onclick="launchQuickCommerce('blinkit')" class="w-full p-4 rounded-2xl bg-amber-400 hover:bg-amber-500 text-stone-900 font-bold text-sm shadow-md transition-all flex items-center justify-between group">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-stone-900/10 flex items-center justify-center text-lg font-black">B</span>
+                <div class="text-left">
+                  <p class="font-bold">Blinkit</p>
+                  <p class="text-[11px] text-stone-800 font-normal">Groceries delivered in minutes</p>
+                </div>
+              </div>
+              <span class="text-xs bg-stone-900/10 px-2.5 py-1 rounded-lg group-hover:translate-x-1 transition-transform">Order ➔</span>
+            </button>
+
+            <!-- Zepto -->
+            <button onclick="launchQuickCommerce('zepto')" class="w-full p-4 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-between group">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg font-black">Z</span>
+                <div class="text-left">
+                  <p class="font-bold">Zepto</p>
+                  <p class="text-[11px] text-purple-200 font-normal">Fresh produce & quick essentials</p>
+                </div>
+              </div>
+              <span class="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:translate-x-1 transition-transform">Order ➔</span>
+            </button>
+
+            <!-- Amazon Fresh -->
+            <button onclick="launchQuickCommerce('amazon')" class="w-full p-4 rounded-2xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-sm shadow-md transition-all flex items-center justify-between group">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg font-black">A</span>
+                <div class="text-left">
+                  <p class="font-bold">Amazon Fresh</p>
+                  <p class="text-[11px] text-stone-300 font-normal">Scheduled staples & daily items</p>
+                </div>
+              </div>
+              <span class="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:translate-x-1 transition-transform">Order ➔</span>
+            </button>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs space-y-1">
+            <span class="font-bold block text-stone-800 dark:text-stone-200">How Delivery Works:</span>
+            <p>Your checklist is automatically copied to your clipboard so you can paste directly into your delivery search bar.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: INTERACTIVE COOKING & KITCHEN TIMERS-->
+    <!-- ========================================== -->
+    <section id="tabSection-cooking" class="tab-pane hidden space-y-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-paprika-100 dark:bg-paprika-950/60 text-paprika-700 dark:text-paprika-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>👨‍🍳</span> Active Kitchen Mode
+          </div>
+          <h2 class="text-3xl font-extrabold text-stone-900 dark:text-white">Guided Step-by-Step Cooking</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Track prioritized prep tasks, monitor recipe step progress, and run synchronous culinary timers with alarm sounds.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-stone-400">Currently Cooking:</span>
+          <span id="activeCookingDishBadge" class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-paprika-50 dark:bg-paprika-950 text-paprika-600 border border-paprika-200 dark:border-paprika-800">
+            Select a recipe below or from library
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Step by Step Tasks Column -->
+        <div class="lg:col-span-7 bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-stone-200 dark:border-stone-800 space-y-6">
+          
+          <!-- Progress Tracker -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-stone-500">Cooking Progress</span>
+              <span id="cookingProgressPercent" class="text-xs font-black text-paprika-600">0% Completed</span>
+            </div>
+            <div class="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-3 overflow-hidden">
+              <div id="cookingProgressBar" class="bg-gradient-to-r from-paprika-500 to-amberchef-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Step Items with Priority Badges -->
+          <div class="space-y-4 pt-2">
+            <h3 class="text-sm font-bold text-stone-900 dark:text-white flex items-center justify-between">
+              <span>Task Breakdown & Priorities</span>
+              <span class="text-[11px] text-stone-400 font-normal">Check off completed steps</span>
+            </h3>
+
+            <div id="cookingStepsContainer" class="space-y-3">
+              <!-- Steps loaded dynamically from active recipe -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-Timer Console -->
+        <div class="lg:col-span-5 bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 shadow-xl border border-stone-200 dark:border-stone-800 space-y-6">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+            <div class="flex items-center space-x-2">
+              <span class="text-xl">⏱️</span>
+              <h3 class="font-extrabold text-stone-900 dark:text-white text-base">Kitchen Timer Hub</h3>
+            </div>
+            <span class="text-[11px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">Web Audio Synthesizer</span>
+          </div>
+
+          <!-- Quick Timer Presets -->
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-stone-400 block mb-2">Quick Presets</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button onclick="createTimer('Boil Eggs', 8 * 60)" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 text-xs font-semibold text-center transition-colors">
+                🥚 Boil 8m
+              </button>
+              <button onclick="createTimer('Simmer Sauce', 20 * 60)" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 text-xs font-semibold text-center transition-colors">
+                🍲 Simmer 20m
+              </button>
+              <button onclick="createTimer('Bake Casserole', 35 * 60)" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 text-xs font-semibold text-center transition-colors">
+                🥖 Bake 35m
+              </button>
+              <button onclick="createTimer('Rest Protein', 5 * 60)" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-paprika-50 text-stone-700 dark:text-stone-300 text-xs font-semibold text-center transition-colors">
+                🥩 Rest 5m
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Custom Timer -->
+          <form onsubmit="handleCustomTimerSubmit(event)" class="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-stone-400 block">Custom Timer</span>
+            <div class="grid grid-cols-3 gap-2">
+              <input type="text" id="customTimerLabel" placeholder="Label (e.g. Pasta)" class="col-span-2 px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white" required>
+              <input type="number" id="customTimerMinutes" placeholder="Minutes" min="1" max="300" class="px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white" required>
+            </div>
+            <button type="submit" class="w-full py-2 px-4 rounded-xl bg-paprika-600 hover:bg-paprika-700 text-white font-bold text-xs shadow-xs transition-colors">
+              + Start Custom Timer
+            </button>
+          </form>
+
+          <!-- Active Timers List -->
+          <div class="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-stone-400 block">Active Clocks</span>
+            <div id="activeTimersContainer" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+              <!-- Rendered active timer widgets -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: PRECISE UNIT CONVERTER              -->
+    <!-- ========================================== -->
+    <section id="tabSection-converter" class="tab-pane hidden space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amberchef-100 dark:bg-amberchef-950/60 text-amberchef-700 dark:text-amberchef-300 text-xs font-bold uppercase tracking-wider">
+          <span>📐</span> Precision Culinary Math
+        </div>
+        <h2 class="text-3xl font-extrabold text-stone-900 dark:text-white">Kitchen Unit Converter</h2>
+        <p class="text-stone-500 text-sm">
+          Seamlessly switch between metric (g, ml, kg) and imperial (cups, oz, tbsp, tsp, lbs) with calibrated density adjustments.
+        </p>
+      </div>
+
+      <div class="max-w-2xl mx-auto bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-stone-200 dark:border-stone-800 space-y-6">
+        
+        <!-- Ingredient Density Preset -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">
+            Ingredient Type (Density Calibration)
+          </label>
+          <select id="converterIngredientType" onchange="recalculateConverter()" class="w-full px-4 py-3 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm font-semibold text-stone-900 dark:text-white">
+            <option value="water">Water / Milk / General Liquids (1.00 g/ml)</option>
+            <option value="flour">All-Purpose Flour (0.53 g/ml)</option>
+            <option value="sugar">Granulated Sugar (0.85 g/ml)</option>
+            <option value="brown_sugar">Packed Brown Sugar (0.82 g/ml)</option>
+            <option value="butter">Butter / Solid Fat (0.91 g/ml)</option>
+            <option value="honey">Honey / Molasses (1.42 g/ml)</option>
+            <option value="oil">Olive Oil / Cooking Oil (0.92 g/ml)</option>
+          </select>
+        </div>
+
+        <!-- Conversion Fields Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+          
+          <!-- From Unit -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-stone-400 uppercase">From</label>
+            <input 
+              type="number" 
+              id="converterInputVal" 
+              value="1" 
+              step="any" 
+              min="0" 
+              oninput="recalculateConverter()" 
+              class="w-full px-4 py-3 rounded-2xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white font-bold text-lg"
+            />
+            <select id="converterFromUnit" onchange="recalculateConverter()" class="w-full px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs font-semibold text-stone-900 dark:text-white">
+              <optgroup label="Volume">
+                <option value="cup" selected>Cup (US)</option>
+                <option value="tbsp">Tablespoon (tbsp)</option>
+                <option value="tsp">Teaspoon (tsp)</option>
+                <option value="ml">Milliliter (ml)</option>
+                <option value="l">Liter (l)</option>
+                <option value="floz">Fluid Ounce (fl oz)</option>
+              </optgroup>
+              <optgroup label="Weight">
+                <option value="g">Grams (g)</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="oz">Ounces (oz)</option>
+                <option value="lb">Pounds (lb)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- To Unit -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-stone-400 uppercase">To</label>
+            <div id="converterOutputVal" class="w-full px-4 py-3 rounded-2xl bg-paprika-50 dark:bg-paprika-950/40 text-paprika-600 dark:text-paprika-400 font-extrabold text-xl border border-paprika-200 dark:border-paprika-800 overflow-hidden text-ellipsis">
+              125 g
+            </div>
+            <select id="converterToUnit" onchange="recalculateConverter()" class="w-full px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs font-semibold text-stone-900 dark:text-white">
+              <optgroup label="Weight">
+                <option value="g" selected>Grams (g)</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="oz">Ounces (oz)</option>
+                <option value="lb">Pounds (lb)</option>
+              </optgroup>
+              <optgroup label="Volume">
+                <option value="cup">Cup (US)</option>
+                <option value="tbsp">Tablespoon (tbsp)</option>
+                <option value="tsp">Teaspoon (tsp)</option>
+                <option value="ml">Milliliter (ml)</option>
+                <option value="l">Liter (l)</option>
+                <option value="floz">Fluid Ounce (fl oz)</option>
+              </optgroup>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 text-xs text-stone-500">
+          <p id="converterExplanationText" class="font-medium text-stone-700 dark:text-stone-300">
+            1 US Cup of All-Purpose Flour is approximately 125 grams.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- AI Dietary Recommendation Modal -->
+    <div id="aiDietModal" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-xs hidden p-4">
+      <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 dark:border-stone-800 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">✨</span>
+            <h3 class="text-lg font-extrabold text-stone-900 dark:text-white">Offline AI Culinary Advisor</h3>
+          </div>
+          <button onclick="toggleModal('aiDietModal', false)" class="text-stone-400 hover:text-stone-600 text-xl font-bold">✕</button>
+        </div>
+        <p class="text-xs text-stone-500 mb-6">
+          Rule-based heuristic engine analyzing your pantry stock and dietary goals to synthesize optimal meal plans offline.
+        </p>
+
+        <form onsubmit="handleAiDietSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Target Calorie Range per Serving</label>
+            <select id="aiCalorieGoal" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm">
+              <option value="any">Any Calorie Level</option>
+              <option value="light">Light & Lean (&lt; 400 kcal)</option>
+              <option value="balanced" selected>Balanced & Satisfying (400 - 650 kcal)</option>
+              <option value="hearty">Hearty & High Energy (&gt; 650 kcal)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Primary Cuisine Preference</label>
+            <select id="aiCuisinePref" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm">
+              <option value="any">Surprise Me (Any Cuisine)</option>
+              <option value="italian">Italian Classic</option>
+              <option value="north_indian">North Indian Rich & Spiced</option>
+              <option value="south_indian">South Indian Fragrant & Coastal</option>
+              <option value="continental">Continental European</option>
+              <option value="asian">Asian Wok & Umami</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Dietary Filters</label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-stone-100 dark:bg-stone-800"><input type="checkbox" id="aiIsVeg"> Vegetarian Only</label>
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-stone-100 dark:bg-stone-800"><input type="checkbox" id="aiIsKeto"> Low-Carb / Keto</label>
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-stone-100 dark:bg-stone-800"><input type="checkbox" id="aiIsNutFree"> Nut Allergy Safe</label>
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-stone-100 dark:bg-stone-800"><input type="checkbox" id="aiPantryPriority" checked> Prioritize In-Stock Pantry</label>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3 rounded-2xl bg-gradient-to-r from-paprika-600 to-amberchef-600 text-white font-extrabold text-sm shadow-md mt-4">
+            Synthesize Recommendations
+          </button>
+        </form>
+
+        <div id="aiRecommendationsOutput" class="mt-6 pt-6 border-t border-stone-200 dark:border-stone-800 hidden space-y-4">
+          <h4 class="text-xs font-bold uppercase text-stone-400">Top Algorithmic Matches</h4>
+          <div id="aiRecsCardsContainer" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Pantry Item Modal -->
+    <div id="addPantryItemModal" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-xs hidden p-4">
+      <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-stone-200 dark:border-stone-800">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-base font-extrabold text-stone-900 dark:text-white">Add Pantry Ingredient</h3>
+          <button onclick="toggleModal('addPantryItemModal', false)" class="text-stone-400 hover:text-stone-600 text-xl font-bold">✕</button>
+        </div>
+
+        <form onsubmit="handlePantryAddSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Item Name</label>
+            <input type="text" id="newPantryName" placeholder="e.g. Greek Yogurt, Basmati Rice" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Quantity & Unit</label>
+              <input type="text" id="newPantryQty" placeholder="e.g. 500g, 2L" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm" required>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Category</label>
+              <select id="newPantryCategory" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm">
+                <option value="Dairy">Dairy</option>
+                <option value="Produce">Produce</option>
+                <option value="Pantry">Pantry / Grains</option>
+                <option value="Protein">Meat & Protein</option>
+                <option value="Spices">Spices & Sauces</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Expiration Date</label>
+            <input type="date" id="newPantryExpiry" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm" required>
+          </div>
+          <div class="pt-2 flex justify-end space-x-2">
+            <button type="button" onclick="toggleModal('addPantryItemModal', false)" class="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">Cancel</button>
+            <button type="submit" class="px-5 py-2 text-xs font-bold rounded-xl bg-paprika-600 hover:bg-paprika-700 text-white">Save Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 py-6 mt-12 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
+      <div class="flex items-center space-x-2">
+        <span class="font-extrabold text-stone-900 dark:text-stone-100">Kitchen Calc</span>
+        <span>•</span>
+        <span>Smart Recipe Scaler & Kitchen Suite</span>
+      </div>
+      <div>
+        <span>Zero Network Dependencies • 100% Client-Side Privacy • Instant Computation</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ==========================================================================
+       KITCHEN CALC ENGINE & SUITE CONTROLLER
+       100% Offline with localStorage, Web Audio API, & Heuristic Matching
+       ========================================================================== */
+
+    // HTML5 Web Audio Synthesizer (No external audio files)
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playKitchenChime() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+          gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.8);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.12);
+          osc.stop(now + idx * 0.12 + 0.85);
+        });
+      } catch (err) {
+        console.warn('Audio playback error:', err);
+      }
+    }
+
+    // Curated Base Recipes
+    const CURATED_RECIPES = [
+      {
+        id: 'lasagna',
+        name: "Grandma's Classic Lasagna Bolognese",
+        cuisine: 'italian',
+        diet: ['high-protein'],
+        allergies: ['nut-free'],
+        prepTime: 75,
+        calories: 680,
+        servings: 4,
+        description: "Layers of slow-cooked meat ragù, creamy béchamel, delicate pasta sheets, and melted aged mozzarella.",
+        ingredients: [
+          { name: "Ground Meat Blend", quantity: 500, unit: "g" },
+          { name: "Lasagna Sheets", quantity: 12, unit: "piece" },
+          { name: "San Marzano Tomatoes", quantity: 800, unit: "g" },
+          { name: "Whole Milk Ricotta", quantity: 250, unit: "g" },
+          { name: "Shredded Mozzarella", quantity: 300, unit: "g" },
+          { name: "Parmigiano-Reggiano", quantity: 75, unit: "g" }
+        ],
+        steps: [
+          { title: "Mise en Place & Sauté", priority: "prep", text: "Brown ground meat in a deep pan with aromatics and extra virgin olive oil." },
+          { title: "Simmer Bolognese Sauce", priority: "simmer", text: "Stir in San Marzano tomatoes; simmer gently for 35 minutes until dense." },
+          { title: "Layer the Lasagna", priority: "prep", text: "Alternate pasta sheets, rich ragù, ricotta, and grated mozzarella." },
+          { title: "Bake to Golden Perfection", priority: "high", text: "Bake at 190°C (375°F) for 25 minutes until bubbly; let rest 10 minutes." }
+        ]
+      },
+      {
+        id: 'paneer',
+        name: "North Indian Paneer Butter Masala",
+        cuisine: 'north_indian',
+        diet: ['vegetarian', 'gluten-free'],
+        allergies: ['egg-free'],
+        prepTime: 35,
+        calories: 520,
+        servings: 3,
+        description: "Soft cottage cheese simmered in a velvety cashew-tomato butter sauce spiced with fenugreek and garam masala.",
+        ingredients: [
+          { name: "Fresh Paneer Cubes", quantity: 300, unit: "g" },
+          { name: "Roma Tomatoes Pureed", quantity: 400, unit: "g" },
+          { name: "Raw Cashews Soaked", quantity: 50, unit: "g" },
+          { name: "Salted Butter (Makhani)", quantity: 45, unit: "g" },
+          { name: "Heavy Cream", quantity: 60, unit: "ml" },
+          { name: "Kasuri Methi & Spices", quantity: 10, unit: "g" }
+        ],
+        steps: [
+          { title: "Prepare Velvet Gravy", priority: "prep", text: "Puree soaked cashews with tomatoes until silky smooth." },
+          { title: "Sauté Aromatics in Butter", priority: "high", text: "Melt butter on medium heat with ginger-garlic paste and Kashmiri chili." },
+          { title: "Simmer Sauce", priority: "simmer", text: "Simmer tomato gravy for 15 minutes until butter separates along edges." },
+          { title: "Fold Paneer & Cream", priority: "high", text: "Toss in fresh paneer, crush dried kasuri methi, swirl in heavy cream." }
+        ]
+      },
+      {
+        id: 'bourguignon',
+        name: "Classic French Beef Bourguignon",
+        cuisine: 'continental',
+        diet: ['high-protein'],
+        allergies: ['nut-free', 'dairy-free'],
+        prepTime: 120,
+        calories: 720,
+        servings: 6,
+        description: "Tender beef braised slowly in red wine, enriched with pearl onions, cremini mushrooms, and herbs.",
+        ingredients: [
+          { name: "Beef Chuck Roast (Cubed)", quantity: 1200, unit: "g" },
+          { name: "Dry Red Wine (Burgundy)", quantity: 500, unit: "ml" },
+          { name: "Beef Bone Broth", quantity: 400, unit: "ml" },
+          { name: "Cremini Mushrooms", quantity: 300, unit: "g" },
+          { name: "Pearl Onions", quantity: 200, unit: "g" },
+          { name: "Chunky Carrots", quantity: 250, unit: "g" }
+        ],
+        steps: [
+          { title: "High-Heat Sear", priority: "high", text: "Sear dry beef cubes in batches until deeply browned." },
+          { title: "Deglaze & Slow Simmer", priority: "simmer", text: "Deglaze pot with Burgundy wine; add broth and bouquet garni; simmer 90m." },
+          { title: "Sauté Mushrooms & Onions", priority: "prep", text: "Caramelize pearl onions and mushrooms separately in butter." },
+          { title: "Combine & Glaze", priority: "high", text: "Recombine vegetables and reduce braising liquid into a glossy demi-glace." }
+        ]
+      },
+      {
+        id: 'sambar',
+        name: "South Indian Udupi Vegetable Sambar",
+        cuisine: 'south_indian',
+        diet: ['vegetarian', 'vegan', 'gluten-free'],
+        allergies: ['nut-free', 'dairy-free', 'egg-free'],
+        prepTime: 40,
+        calories: 280,
+        servings: 5,
+        description: "Hearty yellow lentil stew with drumsticks, sambar onions, tamarind pulp, and aromatic curry leaf tempering.",
+        ingredients: [
+          { name: "Toor Dal (Yellow Split Peas)", quantity: 200, unit: "g" },
+          { name: "Shallots (Sambar Onions)", quantity: 150, unit: "g" },
+          { name: "Tamarind Pulp Extract", quantity: 45, unit: "ml" },
+          { name: "Fresh Drumstick", quantity: 2, unit: "piece" },
+          { name: "Sambar Spice Blend", quantity: 25, unit: "g" },
+          { name: "Mustard Seeds & Curry Leaves", quantity: 10, unit: "g" }
+        ],
+        steps: [
+          { title: "Pressure Cook Dal", priority: "prep", text: "Cook toor dal with turmeric until soft and mash thoroughly." },
+          { title: "Boil Tamarind Broth", priority: "simmer", text: "Cook shallots and drumsticks in tamarind water with sambar masala." },
+          { title: "Merge Lentils", priority: "simmer", text: "Combine mashed dal into the simmering broth; boil 8 minutes." },
+          { title: "Aromatic Tadka", priority: "high", text: "Temper mustard seeds, asafoetida, and curry leaves in hot coconut oil." }
+        ]
+      }
+    ];
+
+    // Procedural Generator Matrix (Expands library to 10,000+ realistic recipes)
+    const MATRIX_CUISINES = [
+      { key: 'continental', label: 'Continental' },
+      { key: 'italian', label: 'Italian' },
+      { key: 'north_indian', label: 'North Indian' },
+      { key: 'south_indian', label: 'South Indian' },
+      { key: 'asian', label: 'Asian Wok' },
+      { key: 'mexican', label: 'Mexican' }
+    ];
+
+    const MATRIX_METHODS = [
+      'Slow Braised', 'Fire Roasted', 'Pan-Seared', 'Claypot Curried', 'Crispy Golden',
+      'Rustic Herb-Infused', 'Wood-Fired', 'Simmered Homestyle', 'Velvet Steamed', 'Smoked Glazed'
+    ];
+
+    const MATRIX_PROTEINS = [
+      { name: 'Paneer', veg: true, vegan: false, gf: true, nutFree: true, cal: 480 },
+      { name: 'Chicken Breast', veg: false, vegan: false, gf: true, nutFree: true, cal: 420 },
+      { name: 'Portobello Mushrooms', veg: true, vegan: true, gf: true, nutFree: true, cal: 260 },
+      { name: 'Tiger Prawns', veg: false, vegan: false, gf: true, nutFree: true, cal: 340 },
+      { name: 'Organic Tofu', veg: true, vegan: true, gf: true, nutFree: true, cal: 310 },
+      { name: 'Lamb Shank', veg: false, vegan: false, gf: true, nutFree: true, cal: 620 },
+      { name: 'Arborio Rice', veg: true, vegan: true, gf: true, nutFree: true, cal: 390 },
+      { name: 'Yellow Lentils (Toor Dal)', veg: true, vegan: true, gf: true, nutFree: true, cal: 290 },
+      { name: 'Atlantic Salmon', veg: false, vegan: false, gf: true, nutFree: true, cal: 460 },
+      { name: 'Garbanzo Chickpeas', veg: true, vegan: true, gf: true, nutFree: true, cal: 330 }
+    ];
+
+    const MATRIX_FLAVORS = [
+      'with San Marzano & Basil Reduction', 'in Rich Cashew Makhani Glaze',
+      'with Tellicherry Black Pepper & Curry Leaf', 'with Burgundy Wine & Thyme Jus',
+      'in Sweet Chili Lemongrass Broth', 'with Smoky Chipotle & Lime Relish',
+      'in Silky Coconut Tamarind Broth', 'with Garlic Butter & Fresh Rosemary'
+    ];
+
+    function getProceduralRecipe(index) {
+      if (index < CURATED_RECIPES.length) {
+        return CURATED_RECIPES[index];
+      }
+      const adjustedIdx = index - CURATED_RECIPES.length;
+      const cObj = MATRIX_CUISINES[adjustedIdx % MATRIX_CUISINES.length];
+      const method = MATRIX_METHODS[Math.floor(adjustedIdx / 6) % MATRIX_METHODS.length];
+      const protein = MATRIX_PROTEINS[Math.floor(adjustedIdx / 60) % MATRIX_PROTEINS.length];
+      const flavor = MATRIX_FLAVORS[Math.floor(adjustedIdx / 720) % MATRIX_FLAVORS.length];
+
+      const prepTime = 20 + ((adjustedIdx * 7) % 65);
+      const servings = 2 + (adjustedIdx % 5);
+
+      const diets = [];
+      if (protein.veg) diets.push('vegetarian');
+      if (protein.vegan) diets.push('vegan');
+      if (protein.gf) diets.push('gluten-free');
+      if (protein.cal > 400 && !protein.veg) diets.push('high-protein');
+
+      const allergies = [];
+      if (protein.nutFree) allergies.push('nut-free');
+      if (protein.vegan) allergies.push('dairy-free', 'egg-free');
+
+      return {
+        id: `proc_${index}`,
+        name: `${method} ${protein.name} ${flavor}`,
+        cuisine: cObj.key,
+        diet: diets,
+        allergies: allergies,
+        prepTime: prepTime,
+        calories: protein.cal + (index % 150),
+        servings: servings,
+        description: `Handcrafted ${cObj.label} dish featuring prime ${protein.name.toLowerCase()} prepared ${method.toLowerCase()} ${flavor}.`,
+        ingredients: [
+          { name: `Fresh ${protein.name}`, quantity: Math.round(100 * servings * 0.8), unit: 'g' },
+          { name: "Cooking Oil / Ghee", quantity: Math.round(15 * servings), unit: 'ml' },
+          { name: "Savory Sauce Reduction", quantity: Math.round(80 * servings), unit: 'ml' },
+          { name: "Garnish Seasoning & Herbs", quantity: Math.round(5 * servings), unit: 'g' }
+        ],
+        steps: [
+          { title: "Prep & Aromatics", priority: "prep", text: `Prepare ${protein.name} and slice aromatics evenly.` },
+          { title: "Sear & Sauté", priority: "high", text: `Sear ${protein.name} on medium-high heat until golden brown.` },
+          { title: "Simmer Flavour Base", priority: "simmer", text: `Add seasoning sauce; simmer gently for ${Math.round(prepTime * 0.6)} minutes.` },
+          { title: "Finish & Serve", priority: "high", text: "Plate hot, garnish with herbs, and serve immediately." }
+        ]
+      };
+    }
+
+    // App State
+    const APP_STATE = {
+      activeTab: 'scaler',
+      scaler: {
+        dishName: "Grandma's Classic Lasagna Bolognese",
+        originalServings: 4,
+        desiredServings: 8,
+        ingredients: [
+          { name: "Ground Meat Blend", quantity: 500, unit: "g" },
+          { name: "San Marzano Tomatoes", quantity: 800, unit: "g" },
+          { name: "Mozzarella & Ricotta", quantity: 450, unit: "g" }
+        ],
+        hasCalculated: false,
+        stale: false,
+        lastScaledResults: null
+      },
+      pantry: [
+        { id: 'p1', name: 'Toor Dal', category: 'Pantry', qty: '1 kg', expiry: getFutureDate(45) },
+        { id: 'p2', name: 'Fresh Paneer', category: 'Dairy', qty: '400 g', expiry: getFutureDate(2) },
+        { id: 'p3', name: 'Roma Tomatoes', category: 'Produce', qty: '1.5 kg', expiry: getFutureDate(1) },
+        { id: 'p4', name: 'Whole Milk Ricotta', category: 'Dairy', qty: '250 g', expiry: getFutureDate(-1) },
+        { id: 'p5', name: 'Basmati Rice', category: 'Pantry', qty: '2 kg', expiry: getFutureDate(120) },
+        { id: 'p6', name: 'Tellicherry Black Pepper', category: 'Spices', qty: '100 g', expiry: getFutureDate(200) }
+      ],
+      shoppingList: [
+        { id: 's1', text: 'Fresh Basil Leaves (1 bunch)', checked: false },
+        { id: 's2', text: 'Lasagna Pasta Sheets (1 box)', checked: true }
+      ],
+      cooking: {
+        currentRecipe: null,
+        completedSteps: []
+      },
+      timers: [],
+      library: {
+        page: 1,
+        pageSize: 9,
+        cuisineFilter: 'all',
+        searchTerm: '',
+        maxTime: 120,
+        totalItems: 10000
+      },
+      accessibility: {
+        fontScale: 'normal',
+        highContrast: false,
+        useFractions: true
+      }
+    };
+
+    function getFutureDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    }
+
+    const STORAGE_KEY = 'KITCHEN_CALC_MASTER_STORE_V1';
+
+    function saveStateToLocalStorage() {
+      try {
+        const serialized = JSON.stringify({
+          scaler: APP_STATE.scaler,
+          pantry: APP_STATE.pantry,
+          shoppingList: APP_STATE.shoppingList,
+          accessibility: APP_STATE.accessibility
+        });
+        localStorage.setItem(STORAGE_KEY, serialized);
+      } catch (err) {
+        console.warn('LocalStorage save failed:', err);
+      }
+    }
+
+    function loadStateFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed.scaler) APP_STATE.scaler = Object.assign(APP_STATE.scaler, parsed.scaler);
+        if (Array.isArray(parsed.pantry)) APP_STATE.pantry = parsed.pantry;
+        if (Array.isArray(parsed.shoppingList)) APP_STATE.shoppingList = parsed.shoppingList;
+        if (parsed.accessibility) APP_STATE.accessibility = Object.assign(APP_STATE.accessibility, parsed.accessibility);
+      } catch (err) {
+        console.warn('Recovered safely from corrupted data:', err);
+      }
+    }
+
+    // Toast Notification System
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `p-3.5 rounded-2xl shadow-xl border text-xs font-semibold flex items-center space-x-2 transition-all transform duration-300 translate-y-4 opacity-0 pointer-events-auto ${
+        type === 'success' 
+          ? 'bg-emerald-600 text-white border-emerald-500' 
+          : type === 'error' 
+          ? 'bg-red-600 text-white border-red-500' 
+          : 'bg-stone-900 text-white border-stone-800'
+      }`;
+
+      const icon = type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️';
+      toast.innerHTML = `<span>${icon}</span><span class="flex-1">${message}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Confirmation Modal System
+    let pendingConfirmAction = null;
+    function openConfirmModal(title, message, onConfirm) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalMessage').innerText = message;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    document.getElementById('confirmModalCancelBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.add('hidden');
+      pendingConfirmAction = null;
+    });
+
+    document.getElementById('confirmModalActionBtn').addEventListener('click', () => {
+      if (typeof pendingConfirmAction === 'function') {
+        pendingConfirmAction();
+      }
+      document.getElementById('confirmModal').classList.add('hidden');
+      pendingConfirmAction = null;
+    });
+
+    function toggleModal(modalId, show) {
+      const el = document.getElementById(modalId);
+      if (el) {
+        if (show) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    }
+
+    // Tab Controller
+    function switchTab(tabId) {
+      APP_STATE.activeTab = tabId;
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-stone-600', 'dark:text-stone-300');
+      });
+
+      const targetPane = document.getElementById(`tabSection-${tabId}`);
+      const targetBtn = document.getElementById(`tabBtn-${tabId}`);
+
+      if (targetPane) targetPane.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.classList.add('tab-active');
+        targetBtn.classList.remove('text-stone-600', 'dark:text-stone-300');
+      }
+
+      if (tabId === 'pantry') renderPantryView();
+      if (tabId === 'shopping') renderShoppingListView();
+      if (tabId === 'library') renderLibraryGrid();
+      if (tabId === 'cooking' && !APP_STATE.cooking.currentRecipe) {
+        loadRecipeIntoCookingMode(CURATED_RECIPES[0]);
+      }
+    }
+
+    // Precision Fraction & Decimal Formatter
+    function formatQuantity(num, unit = '') {
+      if (isNaN(num) || num === null || num === undefined) return '0';
+      const cleanDec = Math.round(num * 100) / 100;
+
+      if (!APP_STATE.accessibility.useFractions) {
+        return cleanDec.toString();
+      }
+
+      const isVolume = ['cup', 'cups', 'tbsp', 'tsp'].includes(unit.toLowerCase());
+      if (isVolume) {
+        const whole = Math.floor(cleanDec);
+        const frac = Math.round((cleanDec - whole) * 100) / 100;
+        let fracStr = '';
+
+        if (frac >= 0.12 && frac <= 0.15) fracStr = '⅛';
+        else if (frac >= 0.20 && frac <= 0.29) fracStr = '¼';
+        else if (frac >= 0.30 && frac <= 0.38) fracStr = '⅓';
+        else if (frac >= 0.45 && frac <= 0.55) fracStr = '½';
+        else if (frac >= 0.62 && frac <= 0.70) fracStr = '⅔';
+        else if (frac >= 0.72 && frac <= 0.78) fracStr = '¾';
+        else if (frac >= 0.85 && frac <= 0.90) fracStr = '⅞';
+
+        if (fracStr) {
+          return whole > 0 ? `${whole} ${fracStr}` : fracStr;
+        }
+      }
+
+      return cleanDec.toString();
+    }
+
+    // ==========================================
+    // KITCHEN CALC CORE SCALER
+    // ==========================================
+
+    function renderIngredientRows() {
+      const container = document.getElementById('ingredientRowsContainer');
+      container.innerHTML = '';
+
+      APP_STATE.scaler.ingredients.forEach((ing, index) => {
+        const row = document.createElement('div');
+        row.className = 'ingredient-row flex items-center gap-2 group';
+        row.id = `ing-row-${index}`;
+
+        row.innerHTML = `
+          <div class="flex-1">
+            <input 
+              type="text" 
+              placeholder="Ingredient name (e.g. Flour)" 
+              value="${escapeHtml(ing.name)}" 
+              oninput="handleIngredientInputChange(${index}, 'name', this.value)"
+              class="w-full px-3 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-paprika-500"
+              required
+            />
+          </div>
+          <div class="w-24 sm:w-28">
+            <input 
+              type="number" 
+              step="any" 
+              min="0.01" 
+              placeholder="Qty" 
+              value="${ing.quantity || ''}" 
+              oninput="handleIngredientInputChange(${index}, 'quantity', this.value)"
+              class="w-full px-2.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white text-xs sm:text-sm font-bold text-center focus:ring-2 focus:ring-paprika-500"
+              required
+            />
+          </div>
+          <div class="w-20 sm:w-24">
+            <select 
+              onchange="handleIngredientInputChange(${index}, 'unit', this.value)"
+              class="w-full px-2 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800 text-stone-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-paprika-500">
+              ${['g', 'ml', 'kg', 'l', 'cup', 'tbsp', 'tsp', 'oz', 'lb', 'piece', 'pinch'].map(u => `
+                <option value="${u}" ${ing.unit === u ? 'selected' : ''}>${u}</option>
+              `).join('')}
+            </select>
+          </div>
+          <button 
+            type="button" 
+            onclick="removeIngredientRow(${index})" 
+            title="Remove ingredient" 
+            class="p-2 text-stone-400 hover:text-red-500 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors ${APP_STATE.scaler.ingredients.length <= 1 ? 'opacity-30 pointer-events-none' : ''}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById('ingredientCountLabel').innerText = `${APP_STATE.scaler.ingredients.length} ingredients`;
+    }
+
+    function addIngredientRow(name = '', quantity = '', unit = 'g') {
+      APP_STATE.scaler.ingredients.push({ name, quantity, unit });
+      markScalerInputsStale();
+      renderIngredientRows();
+      saveStateToLocalStorage();
+    }
+
+    function removeIngredientRow(index) {
+      if (APP_STATE.scaler.ingredients.length <= 1) return;
+      APP_STATE.scaler.ingredients.splice(index, 1);
+      markScalerInputsStale();
+      renderIngredientRows();
+      saveStateToLocalStorage();
+    }
+
+    function handleIngredientInputChange(index, field, value) {
+      if (field === 'quantity') {
+        APP_STATE.scaler.ingredients[index][field] = value ? parseFloat(value) : '';
+      } else {
+        APP_STATE.scaler.ingredients[index][field] = value;
+      }
+      markScalerInputsStale();
+      saveStateToLocalStorage();
+    }
+
+    function adjustServingInput(elementId, delta) {
+      const input = document.getElementById(elementId);
+      let val = parseFloat(input.value) || 1;
+      val = Math.max(0.5, val + delta);
+      input.value = val;
+      markScalerInputsStale();
+      saveStateToLocalStorage();
+    }
+
+    // Invalidation Handler: Hides/dims old output whenever inputs are modified
+    function markScalerInputsStale() {
+      if (APP_STATE.scaler.hasCalculated) {
+        APP_STATE.scaler.stale = true;
+        document.getElementById('resultsStaleBanner').classList.remove('hidden');
+      }
+    }
+
+    // Real-time input listeners
+    document.getElementById('recipeDishName').addEventListener('input', (e) => {
+      APP_STATE.scaler.dishName = e.target.value;
+      markScalerInputsStale();
+      saveStateToLocalStorage();
+      document.getElementById('error-recipeDishName').classList.add('hidden');
+    });
+
+    document.getElementById('originalServings').addEventListener('input', (e) => {
+      APP_STATE.scaler.originalServings = parseFloat(e.target.value) || 0;
+      markScalerInputsStale();
+      saveStateToLocalStorage();
+      document.getElementById('error-originalServings').classList.add('hidden');
+    });
+
+    document.getElementById('desiredServings').addEventListener('input', (e) => {
+      APP_STATE.scaler.desiredServings = parseFloat(e.target.value) || 0;
+      markScalerInputsStale();
+      saveStateToLocalStorage();
+      document.getElementById('error-desiredServings').classList.add('hidden');
+    });
+
+    // Submit Handler with Validation and Formula Execution
+    function handleScaleSubmit(e) {
+      e.preventDefault();
+
+      const dishName = document.getElementById('recipeDishName').value.trim();
+      const origServ = parseFloat(document.getElementById('originalServings').value);
+      const destServ = parseFloat(document.getElementById('desiredServings').value);
+
+      let isValid = true;
+
+      // Validate Dish Name
+      if (!dishName) {
+        document.getElementById('error-recipeDishName').classList.remove('hidden');
+        document.getElementById('recipeDishName').classList.add('shake-animation', 'border-red-500');
+        setTimeout(() => document.getElementById('recipeDishName').classList.remove('shake-animation'), 400);
+        isValid = false;
+      } else {
+        document.getElementById('error-recipeDishName').classList.add('hidden');
+        document.getElementById('recipeDishName').classList.remove('border-red-500');
+      }
+
+      // Validate Servings
+      if (isNaN(origServ) || origServ <= 0) {
+        document.getElementById('error-originalServings').classList.remove('hidden');
+        document.getElementById('originalServings').classList.add('shake-animation', 'border-red-500');
+        setTimeout(() => document.getElementById('originalServings').classList.remove('shake-animation'), 400);
+        isValid = false;
+      } else {
+        document.getElementById('error-originalServings').classList.add('hidden');
+        document.getElementById('originalServings').classList.remove('border-red-500');
+      }
+
+      if (isNaN(destServ) || destServ <= 0) {
+        document.getElementById('error-desiredServings').classList.remove('hidden');
+        document.getElementById('desiredServings').classList.add('shake-animation', 'border-red-500');
+        setTimeout(() => document.getElementById('desiredServings').classList.remove('shake-animation'), 400);
+        isValid = false;
+      } else {
+        document.getElementById('error-desiredServings').classList.add('hidden');
+        document.getElementById('desiredServings').classList.remove('border-red-500');
+      }
+
+      // Validate Ingredients
+      let validIngredients = [];
+      APP_STATE.scaler.ingredients.forEach((ing, i) => {
+        const nameVal = (ing.name || '').trim();
+        const qtyVal = parseFloat(ing.quantity);
+
+        if (!nameVal || isNaN(qtyVal) || qtyVal <= 0) {
+          isValid = false;
+          const rowEl = document.getElementById(`ing-row-${i}`);
+          if (rowEl) {
+            rowEl.classList.add('shake-animation', 'bg-red-50', 'dark:bg-red-950/40', 'rounded-xl', 'p-1');
+            setTimeout(() => rowEl.classList.remove('shake-animation'), 400);
+          }
+        } else {
+          validIngredients.push({
+            name: nameVal,
+            quantity: qtyVal,
+            unit: ing.unit || 'g'
+          });
+        }
+      });
+
+      if (!isValid) {
+        showToast('Please fix invalid fields (no empty, zero, or negative numbers)', 'error');
+        return;
+      }
+
+      // Scale Formula: New Quantity = Original Quantity * Desired Servings / Original Servings
+      const scaleMultiplier = destServ / origServ;
+
+      const scaledList = validIngredients.map(ing => {
+        const scaledQty = ing.quantity * scaleMultiplier;
+        return {
+          name: ing.name,
+          unit: ing.unit,
+          originalQty: ing.quantity,
+          scaledQty: scaledQty
+        };
+      });
+
+      APP_STATE.scaler.dishName = dishName;
+      APP_STATE.scaler.originalServings = origServ;
+      APP_STATE.scaler.desiredServings = destServ;
+      APP_STATE.scaler.hasCalculated = true;
+      APP_STATE.scaler.stale = false;
+      APP_STATE.scaler.lastScaledResults = {
+        dishName,
+        origServ,
+        destServ,
+        scaleMultiplier,
+        items: scaledList
+      };
+
+      saveStateToLocalStorage();
+      renderScaledResults();
+      showToast('Calculated in Kitchen Calc!', 'success');
+      playKitchenChime();
+    }
+
+    function renderScaledResults() {
+      const res = APP_STATE.scaler.lastScaledResults;
+      if (!res) return;
+
+      document.getElementById('resultsPendingState').classList.add('hidden');
+      document.getElementById('resultsStaleBanner').classList.add('hidden');
+      document.getElementById('resultsActiveCard').classList.remove('hidden');
+
+      document.getElementById('resultDishTitle').innerText = res.dishName;
+      document.getElementById('resultScaleFactor').innerText = `${res.scaleMultiplier.toFixed(2)}×`;
+      document.getElementById('resultOrigServings').innerText = res.origServ;
+      document.getElementById('resultTargetServings').innerText = res.destServ;
+
+      const listContainer = document.getElementById('resultIngredientsList');
+      listContainer.innerHTML = '';
+
+      res.items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-800';
+        
+        row.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-paprika-500"></span>
+            <span class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">${escapeHtml(item.name)}</span>
+          </div>
+          <div class="flex items-center space-x-2 text-right">
+            <span class="text-xs text-stone-400 line-through">
+              ${formatQuantity(item.originalQty, item.unit)} ${item.unit}
+            </span>
+            <span class="text-xs font-bold text-stone-400">➔</span>
+            <span class="text-sm font-black text-paprika-600 bg-paprika-100 dark:bg-paprika-950/80 px-2 py-0.5 rounded-lg">
+              ${formatQuantity(item.scaledQty, item.unit)} ${item.unit}
+            </span>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    function confirmResetScalerForm() {
+      openConfirmModal(
+        'Reset Kitchen Calc Form?',
+        'This will clear current quantities and restore default inputs.',
+        () => {
+          APP_STATE.scaler.dishName = '';
+          APP_STATE.scaler.originalServings = 4;
+          APP_STATE.scaler.desiredServings = 4;
+          APP_STATE.scaler.ingredients = [
+            { name: '', quantity: '', unit: 'g' },
+            { name: '', quantity: '', unit: 'g' },
+            { name: '', quantity: '', unit: 'g' }
+          ];
+          APP_STATE.scaler.hasCalculated = false;
+          APP_STATE.scaler.stale = false;
+          APP_STATE.scaler.lastScaledResults = null;
+
+          document.getElementById('recipeDishName').value = '';
+          document.getElementById('originalServings').value = '4';
+          document.getElementById('desiredServings').value = '4';
+          document.getElementById('resultsPendingState').classList.remove('hidden');
+          document.getElementById('resultsActiveCard').classList.add('hidden');
+          document.getElementById('resultsStaleBanner').classList.add('hidden');
+
+          renderIngredientRows();
+          saveStateToLocalStorage();
+          showToast('Form reset.', 'info');
+        }
+      );
+    }
+
+    function loadSampleRecipe(recipeId) {
+      const rec = CURATED_RECIPES.find(r => r.id === recipeId);
+      if (!rec) return;
+
+      document.getElementById('recipeDishName').value = rec.name;
+      document.getElementById('originalServings').value = rec.servings;
+      document.getElementById('desiredServings').value = rec.servings * 2;
+
+      APP_STATE.scaler.dishName = rec.name;
+      APP_STATE.scaler.originalServings = rec.servings;
+      APP_STATE.scaler.desiredServings = rec.servings * 2;
+      APP_STATE.scaler.ingredients = rec.ingredients.map(ing => ({
+        name: ing.name,
+        quantity: ing.quantity,
+        unit: ing.unit
+      }));
+
+      renderIngredientRows();
+      document.getElementById('scaleRecipeBtn').click();
+    }
+
+    function copyScaledRecipeToClipboard() {
+      const res = APP_STATE.scaler.lastScaledResults;
+      if (!res) return;
+
+      let text = `🍳 SCALED RECIPE: ${res.dishName}\n`;
+      text += `Target Servings: ${res.destServ} (Original: ${res.origServ} servings - ${res.scaleMultiplier.toFixed(2)}x)\n\n`;
+      text += `INGREDIENTS:\n`;
+      res.items.forEach(i => {
+        text += `- ${i.name}: ${formatQuantity(i.scaledQty, i.unit)} ${i.unit}\n`;
+      });
+      text += `\nScaled with Kitchen Calc (Smart Recipe Scaler & Kitchen Suite).`;
+
+      copyTextToClipboard(text);
+      showToast('Scaled recipe copied to clipboard!', 'success');
+    }
+
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.warn('Copy command failed:', err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // ==========================================
+    // 10,000+ RECIPE LIBRARY CONTROLLER
+    // ==========================================
+
+    function renderLibraryGrid() {
+      const grid = document.getElementById('recipeCardsGrid');
+      grid.innerHTML = '';
+
+      const startIdx = (APP_STATE.library.page - 1) * APP_STATE.library.pageSize;
+      const endIdx = startIdx + APP_STATE.library.pageSize;
+
+      let matchedCount = 0;
+      let matchedCards = [];
+      const search = APP_STATE.library.searchTerm.toLowerCase();
+      const cuisine = APP_STATE.library.cuisineFilter;
+      const maxTime = APP_STATE.library.maxTime;
+
+      const isVegOnly = document.getElementById('dietVeg')?.checked || false;
+      const isVeganOnly = document.getElementById('dietVegan')?.checked || false;
+      const isGfOnly = document.getElementById('dietGlutenFree')?.checked || false;
+      const isNutFree = document.getElementById('dietNutFree')?.checked || false;
+      const isDairyFree = document.getElementById('dietDairyFree')?.checked || false;
+
+      for (let i = 0; i < APP_STATE.library.totalItems; i++) {
+        const recipe = getProceduralRecipe(i);
+
+        if (cuisine !== 'all' && recipe.cuisine !== cuisine) continue;
+        if (recipe.prepTime > maxTime) continue;
+        if (isVegOnly && !recipe.diet.includes('vegetarian')) continue;
+        if (isVeganOnly && !recipe.diet.includes('vegan')) continue;
+        if (isGfOnly && !recipe.diet.includes('gluten-free')) continue;
+        if (isNutFree && !recipe.allergies.includes('nut-free')) continue;
+        if (isDairyFree && !recipe.allergies.includes('dairy-free')) continue;
+
+        if (search) {
+          const matchName = recipe.name.toLowerCase().includes(search);
+          const matchIng = recipe.ingredients.some(ing => ing.name.toLowerCase().includes(search));
+          if (!matchName && !matchIng) continue;
+        }
+
+        matchedCount++;
+        if (matchedCount > startIdx && matchedCards.length < APP_STATE.library.pageSize) {
+          matchedCards.push(recipe);
+        }
+
+        if (matchedCards.length === APP_STATE.library.pageSize && matchedCount > endIdx + 50) {
+          break;
+        }
+      }
+
+      matchedCards.forEach(recipe => {
+        const card = createRecipeCardElement(recipe);
+        grid.appendChild(card);
+      });
+
+      document.getElementById('libraryResultCount').innerText = `Displaying page ${APP_STATE.library.page} (Found ${matchedCount}+ recipes)`;
+      document.getElementById('currentLibraryPageText').innerText = `Page ${APP_STATE.library.page}`;
+      document.getElementById('prevLibraryPageBtn').disabled = APP_STATE.library.page <= 1;
+      document.getElementById('nextLibraryPageBtn').disabled = matchedCards.length < APP_STATE.library.pageSize;
+    }
+
+    function createRecipeCardElement(recipe) {
+      const card = document.createElement('div');
+      card.className = 'bg-white dark:bg-stone-900 rounded-3xl p-6 shadow-md hover:shadow-xl border border-stone-200 dark:border-stone-800 transition-all flex flex-col justify-between group';
+
+      const flags = {
+        continental: '🇫🇷',
+        italian: '🇮🇹',
+        north_indian: '🇮🇳',
+        south_indian: '🍛',
+        asian: '🥢',
+        mexican: '🌮'
+      };
+      const flag = flags[recipe.cuisine] || '🍲';
+
+      card.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 flex items-center gap-1">
+              <span>${flag}</span>
+              <span class="capitalize">${recipe.cuisine.replace('_', ' ')}</span>
+            </span>
+            <span class="text-xs font-bold text-stone-400 flex items-center gap-1">
+              ⏱️ ${recipe.prepTime}m
+            </span>
+          </div>
+
+          <h3 class="font-extrabold text-base text-stone-900 dark:text-white group-hover:text-paprika-600 transition-colors line-clamp-2">
+            ${escapeHtml(recipe.name)}
+          </h3>
+
+          <p class="text-xs text-stone-500 dark:text-stone-400 line-clamp-2 leading-relaxed">
+            ${escapeHtml(recipe.description)}
+          </p>
+
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+              👥 ${recipe.servings} Servings
+            </span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amberchef-700 dark:text-amberchef-300">
+              🔥 ${recipe.calories} kcal
+            </span>
+            ${recipe.diet.map(d => `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 capitalize">${d}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="pt-5 mt-4 border-t border-stone-100 dark:border-stone-800 flex gap-2">
+          <button onclick="loadRecipeToScaler('${recipe.id}')" class="flex-1 py-2 px-3 rounded-xl bg-paprika-600 hover:bg-paprika-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-1">
+            <span>⚖️</span> Scale in Kitchen Calc
+          </button>
+          <button onclick="loadRecipeDirectCooking('${recipe.id}')" class="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 text-xs font-bold transition-colors" title="Cook Now">
+            👨‍🍳
+          </button>
+        </div>
+      `;
+      return card;
+    }
+
+    function setLibraryCuisineFilter(cuisine) {
+      APP_STATE.library.cuisineFilter = cuisine;
+      APP_STATE.library.page = 1;
+      document.querySelectorAll('.cuisine-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-cuisine') === cuisine) {
+          btn.classList.add('bg-paprika-600', 'text-white');
+          btn.classList.remove('bg-stone-100', 'dark:bg-stone-800', 'text-stone-700', 'dark:text-stone-300');
+        } else {
+          btn.classList.remove('bg-paprika-600', 'text-white');
+          btn.classList.add('bg-stone-100', 'dark:bg-stone-800', 'text-stone-700', 'dark:text-stone-300');
+        }
+      });
+      renderLibraryGrid();
+    }
+
+    function handleRecipeSearch() {
+      const query = document.getElementById('recipeSearchInput').value.trim();
+      APP_STATE.library.searchTerm = query;
+      APP_STATE.library.page = 1;
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', query.length === 0);
+      renderLibraryGrid();
+    }
+
+    function clearRecipeSearch() {
+      document.getElementById('recipeSearchInput').value = '';
+      APP_STATE.library.searchTerm = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderLibraryGrid();
+    }
+
+    function updateTimeSliderDisplay(val) {
+      APP_STATE.library.maxTime = parseInt(val);
+      document.getElementById('timeSliderValue').innerText = `≤ ${val} mins`;
+      APP_STATE.library.page = 1;
+      renderLibraryGrid();
+    }
+
+    function filterLibraryCards() {
+      APP_STATE.library.page = 1;
+      renderLibraryGrid();
+    }
+
+    function changeLibraryPage(delta) {
+      APP_STATE.library.page = Math.max(1, APP_STATE.library.page + delta);
+      renderLibraryGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function findRecipeAnywhere(id) {
+      const curated = CURATED_RECIPES.find(r => r.id === id);
+      if (curated) return curated;
+      if (id.startsWith('proc_')) {
+        const idx = parseInt(id.replace('proc_', ''));
+        return getProceduralRecipe(idx);
+      }
+      return CURATED_RECIPES[0];
+    }
+
+    function loadRecipeToScaler(recipeId) {
+      const recipe = findRecipeAnywhere(recipeId);
+      if (!recipe) return;
+
+      document.getElementById('recipeDishName').value = recipe.name;
+      document.getElementById('originalServings').value = recipe.servings;
+      document.getElementById('desiredServings').value = recipe.servings;
+
+      APP_STATE.scaler.dishName = recipe.name;
+      APP_STATE.scaler.originalServings = recipe.servings;
+      APP_STATE.scaler.desiredServings = recipe.servings;
+      APP_STATE.scaler.ingredients = recipe.ingredients.map(ing => ({
+        name: ing.name,
+        quantity: ing.quantity,
+        unit: ing.unit
+      }));
+
+      switchTab('scaler');
+      renderIngredientRows();
+      document.getElementById('scaleRecipeBtn').click();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast(`Loaded "${recipe.name}" into Kitchen Calc!`, 'success');
+    }
+
+    function loadRecipeDirectCooking(recipeId) {
+      const recipe = findRecipeAnywhere(recipeId);
+      if (!recipe) return;
+      loadRecipeIntoCookingMode(recipe);
+      switchTab('cooking');
+    }
+
+    // ==========================================
+    // SMART KITCHEN PANTRY & INVENTORY
+    // ==========================================
+
+    function getPantryFreshness(expiryDateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expiry = new Date(expiryDateStr);
+      expiry.setHours(0, 0, 0, 0);
+
+      const diffTime = expiry - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) return { status: 'expired', label: 'Expired', class: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400' };
+      if (diffDays <= 3) return { status: 'soon', label: `Expiring (${diffDays}d)`, class: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400' };
+      return { status: 'fresh', label: 'Fresh', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' };
+    }
+
+    function renderPantryView() {
+      const tbody = document.getElementById('pantryTableBody');
+      tbody.innerHTML = '';
+
+      let total = APP_STATE.pantry.length;
+      let fresh = 0, soon = 0, expired = 0;
+
+      APP_STATE.pantry.forEach(item => {
+        const freshness = getPantryFreshness(item.expiry);
+        if (freshness.status === 'fresh') fresh++;
+        if (freshness.status === 'soon') soon++;
+        if (freshness.status === 'expired') expired++;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-stone-50 dark:hover:bg-stone-800/40 transition-colors';
+        tr.innerHTML = `
+          <td class="py-3.5 px-6 font-bold text-stone-900 dark:text-white">${escapeHtml(item.name)}</td>
+          <td class="py-3.5 px-6 text-stone-500 text-xs">${escapeHtml(item.category)}</td>
+          <td class="py-3.5 px-6 font-semibold">${escapeHtml(item.qty)}</td>
+          <td class="py-3.5 px-6 text-xs text-stone-500">${item.expiry}</td>
+          <td class="py-3.5 px-6">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${freshness.class}">
+              ${freshness.label}
+            </span>
+          </td>
+          <td class="py-3.5 px-6 text-right space-x-2">
+            <button onclick="addPantryToShoppingList('${item.id}')" title="Need more? Add to grocery" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+              + Restock
+            </button>
+            <button onclick="deletePantryItem('${item.id}')" title="Delete" class="text-xs text-red-500 hover:text-red-700 font-semibold">
+              Delete
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('pantryStatTotal').innerText = total;
+      document.getElementById('pantryStatFresh').innerText = fresh;
+      document.getElementById('pantryStatSoon').innerText = soon;
+      document.getElementById('pantryStatExpired').innerText = expired;
+
+      const banner = document.getElementById('expiryWarningBanner');
+      if (soon > 0 || expired > 0) {
+        banner.classList.remove('hidden');
+        document.getElementById('expiryWarningText').innerText = 
+          `You have ${soon} item(s) expiring within 3 days and ${expired} expired item(s). Use them now to prevent food waste!`;
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      refreshPantrySuggestions();
+    }
+
+    function refreshPantrySuggestions() {
+      const container = document.getElementById('pantrySuggestedRecipesGrid');
+      container.innerHTML = '';
+
+      const pantryNames = APP_STATE.pantry.map(p => p.name.toLowerCase());
+      
+      const scored = CURATED_RECIPES.map(rec => {
+        let matchCount = 0;
+        rec.ingredients.forEach(ing => {
+          const ingName = ing.name.toLowerCase();
+          if (pantryNames.some(pName => ingName.includes(pName) || pName.includes(ingName))) {
+            matchCount++;
+          }
+        });
+        const matchPercent = Math.round((matchCount / rec.ingredients.length) * 100);
+        return { recipe: rec, matchPercent, matchCount };
+      }).sort((a, b) => b.matchPercent - a.matchPercent).slice(0, 3);
+
+      scored.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-2';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+              ${item.matchPercent}% in pantry
+            </span>
+            <span class="text-xs text-stone-400">⏱️ ${item.recipe.prepTime}m</span>
+          </div>
+          <h4 class="font-bold text-sm text-stone-900 dark:text-white">${item.recipe.name}</h4>
+          <p class="text-xs text-stone-500">${item.matchCount} of ${item.recipe.ingredients.length} ingredients ready</p>
+          <button onclick="loadRecipeToScaler('${item.recipe.id}')" class="w-full mt-2 py-1.5 px-3 rounded-xl bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-xs font-bold hover:opacity-90 transition-opacity">
+            Cook & Scale This
+          </button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function handlePantryAddSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('newPantryName').value.trim();
+      const qty = document.getElementById('newPantryQty').value.trim();
+      const category = document.getElementById('newPantryCategory').value;
+      const expiry = document.getElementById('newPantryExpiry').value;
+
+      if (!name || !qty || !expiry) return;
+
+      APP_STATE.pantry.unshift({
+        id: 'p_' + Date.now(),
+        name,
+        qty,
+        category,
+        expiry
+      });
+
+      saveStateToLocalStorage();
+      toggleModal('addPantryItemModal', false);
+      renderPantryView();
+      showToast(`Added ${name} to pantry!`, 'success');
+      e.target.reset();
+    }
+
+    function deletePantryItem(id) {
+      APP_STATE.pantry = APP_STATE.pantry.filter(p => p.id !== id);
+      saveStateToLocalStorage();
+      renderPantryView();
+      showToast('Item removed from pantry.', 'info');
+    }
+
+    function addPantryToShoppingList(pantryId) {
+      const item = APP_STATE.pantry.find(p => p.id === pantryId);
+      if (!item) return;
+      APP_STATE.shoppingList.unshift({
+        id: 's_' + Date.now(),
+        text: `${item.name} (${item.qty})`,
+        checked: false
+      });
+      saveStateToLocalStorage();
+      showToast(`Added ${item.name} to grocery list!`, 'success');
+    }
+
+    // ==========================================
+    // SHOPPING LIST & QUICK-COMMERCE
+    // ==========================================
+
+    function renderShoppingListView() {
+      const listEl = document.getElementById('shoppingItemsList');
+      listEl.innerHTML = '';
+
+      if (APP_STATE.shoppingList.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-8 text-stone-400 text-xs">
+            🛒 Your shopping list is empty! Add missing ingredients from Kitchen Calc recipes.
+          </div>
+        `;
+      }
+
+      APP_STATE.shoppingList.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between p-3 rounded-2xl border transition-all ${
+          item.checked 
+            ? 'bg-stone-50 dark:bg-stone-800/30 border-stone-200 dark:border-stone-800 opacity-60 line-through' 
+            : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700'
+        }`;
+
+        row.innerHTML = `
+          <label class="flex items-center space-x-3 cursor-pointer flex-1">
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleShoppingItem(${index})" class="rounded text-paprika-600 focus:ring-0 w-4 h-4">
+            <span class="text-xs sm:text-sm font-semibold text-stone-800 dark:text-stone-200">${escapeHtml(item.text)}</span>
+          </label>
+          <button onclick="removeShoppingItem(${index})" class="text-stone-400 hover:text-red-500 p-1">✕</button>
+        `;
+        listEl.appendChild(row);
+      });
+
+      document.getElementById('shoppingCountLabel').innerText = `${APP_STATE.shoppingList.length} items`;
+    }
+
+    function handleCustomShoppingItem(e) {
+      e.preventDefault();
+      const input = document.getElementById('customShoppingItemInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      APP_STATE.shoppingList.unshift({
+        id: 's_' + Date.now(),
+        text: val,
+        checked: false
+      });
+      saveStateToLocalStorage();
+      renderShoppingListView();
+      input.value = '';
+    }
+
+    function toggleShoppingItem(index) {
+      APP_STATE.shoppingList[index].checked = !APP_STATE.shoppingList[index].checked;
+      saveStateToLocalStorage();
+      renderShoppingListView();
+    }
+
+    function removeShoppingItem(index) {
+      APP_STATE.shoppingList.splice(index, 1);
+      saveStateToLocalStorage();
+      renderShoppingListView();
+    }
+
+    function clearCompletedShoppingItems() {
+      APP_STATE.shoppingList = APP_STATE.shoppingList.filter(i => !i.checked);
+      saveStateToLocalStorage();
+      renderShoppingListView();
+      showToast('Cleared completed items.', 'info');
+    }
+
+    function sendMissingToShoppingList() {
+      const res = APP_STATE.scaler.lastScaledResults;
+      if (!res) return;
+
+      res.items.forEach(ing => {
+        APP_STATE.shoppingList.push({
+          id: 's_' + Date.now() + Math.random(),
+          text: `${ing.name} (${formatQuantity(ing.scaledQty, ing.unit)} ${ing.unit})`,
+          checked: false
+        });
+      });
+
+      saveStateToLocalStorage();
+      switchTab('shopping');
+      showToast(`Added ${res.items.length} ingredients to shopping list!`, 'success');
+    }
+
+    function launchQuickCommerce(platform) {
+      const activeItems = APP_STATE.shoppingList.filter(i => !i.checked);
+      if (activeItems.length === 0) {
+        showToast('Your shopping list is empty or all items are checked!', 'info');
+        return;
+      }
+
+      const cartSummary = activeItems.map(i => i.text).join(', ');
+      copyTextToClipboard(cartSummary);
+
+      let targetUrl = '';
+      let platformName = '';
+      if (platform === 'instamart') {
+        platformName = 'Swiggy Instamart';
+        targetUrl = `https://www.swiggy.com/instamart/search?custom_back=true&query=${encodeURIComponent(activeItems[0].text)}`;
+      } else if (platform === 'blinkit') {
+        platformName = 'Blinkit';
+        targetUrl = `https://blinkit.com/s/?q=${encodeURIComponent(activeItems[0].text)}`;
+      } else if (platform === 'zepto') {
+        platformName = 'Zepto';
+        targetUrl = `https://zeptonow.com/search?q=${encodeURIComponent(activeItems[0].text)}`;
+      } else {
+        platformName = 'Amazon Fresh';
+        targetUrl = `https://www.amazon.in/alm/storefront?almBrandId=ctnow`;
+      }
+
+      showToast(`Copied cart to clipboard! Launching ${platformName}...`, 'success');
+      setTimeout(() => {
+        window.open(targetUrl, '_blank');
+      }, 400);
+    }
+
+    // ==========================================
+    // GUIDED COOKING & MULTI-TIMERS
+    // ==========================================
+
+    function loadRecipeIntoCookingMode(recipe) {
+      APP_STATE.cooking.currentRecipe = recipe;
+      APP_STATE.cooking.completedSteps = [];
+
+      document.getElementById('activeCookingDishBadge').innerText = recipe.name;
+      renderCookingSteps();
+    }
+
+    function sendScaledToCookingMode() {
+      const res = APP_STATE.scaler.lastScaledResults;
+      if (!res) return;
+
+      const dynamicRecipe = {
+        name: res.dishName,
+        steps: [
+          { title: "Mise en Place & Prep", priority: "prep", text: `Measure scaled quantities for ${res.items.length} ingredients.` },
+          { title: "Sauté Aromatics", priority: "high", text: "Preheat pan; heat oil and sauté base aromatics until fragrant." },
+          { title: "Cook & Simmer", priority: "simmer", text: "Combine remaining ingredients; simmer gently to develop depth." },
+          { title: "Finish & Serve", priority: "high", text: `Plate into ${res.destServ} portions and serve warm.` }
+        ]
+      };
+
+      loadRecipeIntoCookingMode(dynamicRecipe);
+      switchTab('cooking');
+      showToast('Loaded scaled recipe into Cooking Mode!', 'success');
+    }
+
+    function renderCookingSteps() {
+      const container = document.getElementById('cookingStepsContainer');
+      container.innerHTML = '';
+
+      const recipe = APP_STATE.cooking.currentRecipe;
+      if (!recipe || !recipe.steps) {
+        container.innerHTML = `<p class="text-xs text-stone-400">No active recipe steps loaded.</p>`;
+        return;
+      }
+
+      const total = recipe.steps.length;
+      const completed = APP_STATE.cooking.completedSteps.length;
+      const pct = Math.round((completed / total) * 100);
+
+      document.getElementById('cookingProgressPercent').innerText = `${pct}% (${completed}/${total} steps)`;
+      document.getElementById('cookingProgressBar').style.width = `${pct}%`;
+
+      recipe.steps.forEach((step, idx) => {
+        const isDone = APP_STATE.cooking.completedSteps.includes(idx);
+        const card = document.createElement('div');
+        
+        const priorityColors = {
+          high: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400 border-red-200',
+          prep: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400 border-blue-200',
+          simmer: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 border-amber-200',
+          rest: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200'
+        };
+        const pBadge = priorityColors[step.priority] || priorityColors.prep;
+
+        card.className = `p-4 rounded-2xl border transition-all flex items-start space-x-3.5 ${
+          isDone 
+            ? 'bg-stone-50 dark:bg-stone-800/40 border-stone-200 dark:border-stone-800 opacity-60' 
+            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 shadow-xs'
+        }`;
+
+        card.innerHTML = `
+          <input 
+            type="checkbox" 
+            ${isDone ? 'checked' : ''} 
+            onchange="toggleCookingStep(${idx})" 
+            class="mt-1 rounded text-paprika-600 focus:ring-0 w-4 h-4 cursor-pointer"
+          />
+          <div class="space-y-1 flex-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-xs sm:text-sm text-stone-900 dark:text-white ${isDone ? 'line-through' : ''}">
+                Step ${idx + 1}: ${escapeHtml(step.title)}
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${pBadge}">
+                ${step.priority}
+              </span>
+            </div>
+            <p class="text-xs text-stone-500 leading-relaxed ${isDone ? 'line-through' : ''}">
+              ${escapeHtml(step.text)}
+            </p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleCookingStep(stepIndex) {
+      const idx = APP_STATE.cooking.completedSteps.indexOf(stepIndex);
+      if (idx > -1) {
+        APP_STATE.cooking.completedSteps.splice(idx, 1);
+      } else {
+        APP_STATE.cooking.completedSteps.push(stepIndex);
+        playKitchenChime();
+      }
+      renderCookingSteps();
+    }
+
+    // Timer Hub
+    function createTimer(label, seconds) {
+      const timer = {
+        id: 't_' + Date.now(),
+        label: label,
+        totalSeconds: seconds,
+        remainingSeconds: seconds,
+        isRunning: true
+      };
+      APP_STATE.timers.push(timer);
+      renderTimers();
+      updateTimerBadge();
+      showToast(`Started timer: ${label} (${Math.round(seconds / 60)}m)`, 'info');
+    }
+
+    function handleCustomTimerSubmit(e) {
+      e.preventDefault();
+      const label = document.getElementById('customTimerLabel').value.trim();
+      const mins = parseFloat(document.getElementById('customTimerMinutes').value);
+      if (!label || isNaN(mins) || mins <= 0) return;
+
+      createTimer(label, Math.round(mins * 60));
+      e.target.reset();
+    }
+
+    setInterval(() => {
+      let needsRerender = false;
+      APP_STATE.timers.forEach(t => {
+        if (t.isRunning && t.remainingSeconds > 0) {
+          t.remainingSeconds--;
+          needsRerender = true;
+          if (t.remainingSeconds === 0) {
+            t.isRunning = false;
+            playKitchenChime();
+            showToast(`⏰ Kitchen Calc Timer Finished: "${t.label}"!`, 'success');
+          }
+        }
+      });
+      if (needsRerender) {
+        renderTimers();
+        updateTimerBadge();
+      }
+    }, 1000);
+
+    function formatTimeRemaining(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function renderTimers() {
+      const container = document.getElementById('activeTimersContainer');
+      container.innerHTML = '';
+
+      if (APP_STATE.timers.length === 0) {
+        container.innerHTML = `<p class="text-xs text-stone-400">No active clocks running.</p>`;
+        return;
+      }
+
+      APP_STATE.timers.forEach(t => {
+        const item = document.createElement('div');
+        const isDone = t.remainingSeconds === 0;
+
+        item.className = `p-3 rounded-2xl border flex items-center justify-between transition-all ${
+          isDone 
+            ? 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 animate-pulse' 
+            : 'bg-stone-50 dark:bg-stone-800/40 border-stone-200 dark:border-stone-800'
+        }`;
+
+        item.innerHTML = `
+          <div>
+            <span class="text-xs font-bold text-stone-900 dark:text-white block">${escapeHtml(t.label)}</span>
+            <span class="text-lg font-black ${isDone ? 'text-red-600' : 'text-paprika-600'}">
+              ${formatTimeRemaining(t.remainingSeconds)}
+            </span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <button onclick="toggleTimerState('${t.id}')" class="p-1.5 rounded-lg bg-stone-200 dark:bg-stone-700 text-xs font-bold">
+              ${t.isRunning ? '⏸' : '▶'}
+            </button>
+            <button onclick="deleteTimer('${t.id}')" class="p-1.5 rounded-lg text-stone-400 hover:text-red-500 text-xs font-bold">
+              ✕
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleTimerState(timerId) {
+      const t = APP_STATE.timers.find(x => x.id === timerId);
+      if (t) t.isRunning = !t.isRunning;
+      renderTimers();
+      updateTimerBadge();
+    }
+
+    function deleteTimer(timerId) {
+      APP_STATE.timers = APP_STATE.timers.filter(x => x.id !== timerId);
+      renderTimers();
+      updateTimerBadge();
+    }
+
+    function updateTimerBadge() {
+      const badge = document.getElementById('activeTimerBadge');
+      const runningCount = APP_STATE.timers.filter(t => t.isRunning).length;
+      if (runningCount > 0) {
+        badge.classList.remove('hidden');
+        badge.innerText = runningCount;
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // ==========================================
+    // PRECISE UNIT CONVERTER
+    // ==========================================
+
+    const DENSITIES = {
+      water: 1.00,
+      flour: 0.53,
+      sugar: 0.85,
+      brown_sugar: 0.82,
+      butter: 0.91,
+      honey: 1.42,
+      oil: 0.92
+    };
+
+    const VOLUMES_IN_ML = {
+      ml: 1,
+      l: 1000,
+      tsp: 4.92892,
+      tbsp: 14.7868,
+      cup: 236.588,
+      floz: 29.5735
+    };
+
+    const WEIGHTS_IN_G = {
+      g: 1,
+      kg: 1000,
+      oz: 28.3495,
+      lb: 453.592
+    };
+
+    function recalculateConverter() {
+      const inputVal = parseFloat(document.getElementById('converterInputVal').value) || 0;
+      const fromUnit = document.getElementById('converterFromUnit').value;
+      const toUnit = document.getElementById('converterToUnit').value;
+      const ingType = document.getElementById('converterIngredientType').value;
+      const density = DENSITIES[ingType] || 1.0;
+
+      const isFromVol = VOLUMES_IN_ML[fromUnit] !== undefined;
+      const isToVol = VOLUMES_IN_ML[toUnit] !== undefined;
+
+      let grams = 0;
+      if (isFromVol) {
+        const ml = inputVal * VOLUMES_IN_ML[fromUnit];
+        grams = ml * density;
+      } else {
+        grams = inputVal * WEIGHTS_IN_G[fromUnit];
+      }
+
+      let finalResult = 0;
+      if (isToVol) {
+        const ml = grams / density;
+        finalResult = ml / VOLUMES_IN_ML[toUnit];
+      } else {
+        finalResult = grams / WEIGHTS_IN_G[toUnit];
+      }
+
+      const formatted = formatQuantity(finalResult, toUnit);
+      document.getElementById('converterOutputVal').innerText = `${formatted} ${toUnit}`;
+
+      const ingName = document.getElementById('converterIngredientType').selectedOptions[0].text.split('(')[0].trim();
+      document.getElementById('converterExplanationText').innerText = 
+        `${inputVal} ${fromUnit} of ${ingName} equals approx ${formatted} ${toUnit} (at density ${density} g/ml).`;
+    }
+
+    // ==========================================
+    // OFFLINE AI DIETARY ADVISOR
+    // ==========================================
+
+    function handleAiDietSubmit(e) {
+      e.preventDefault();
+      const calorieGoal = document.getElementById('aiCalorieGoal').value;
+      const cuisinePref = document.getElementById('aiCuisinePref').value;
+      const isVeg = document.getElementById('aiIsVeg').checked;
+      const isNutFree = document.getElementById('aiIsNutFree').checked;
+      const prioritizePantry = document.getElementById('aiPantryPriority').checked;
+
+      const pantryNames = APP_STATE.pantry.map(p => p.name.toLowerCase());
+
+      const candidates = [];
+      for (let i = 0; i < 60; i++) {
+        const rec = getProceduralRecipe(i);
+        let score = 50;
+
+        if (cuisinePref !== 'any' && rec.cuisine === cuisinePref) score += 30;
+        if (isVeg && !rec.diet.includes('vegetarian')) continue;
+        if (isNutFree && !rec.allergies.includes('nut-free')) continue;
+
+        if (calorieGoal === 'light' && rec.calories < 400) score += 20;
+        if (calorieGoal === 'balanced' && rec.calories >= 400 && rec.calories <= 650) score += 20;
+        if (calorieGoal === 'hearty' && rec.calories > 650) score += 20;
+
+        if (prioritizePantry) {
+          rec.ingredients.forEach(ing => {
+            if (pantryNames.some(p => ing.name.toLowerCase().includes(p))) {
+              score += 15;
+            }
+          });
+        }
+
+        candidates.push({ recipe: rec, score });
+      }
+
+      candidates.sort((a, b) => b.score - a.score);
+      const top3 = candidates.slice(0, 3);
+
+      const outContainer = document.getElementById('aiRecsCardsContainer');
+      outContainer.innerHTML = '';
+
+      top3.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'p-4 rounded-2xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-between';
+        item.innerHTML = `
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-xs font-bold text-paprika-600">${c.score}% Match</span>
+              <span class="text-xs text-stone-400">• ${c.recipe.calories} kcal</span>
+            </div>
+            <h5 class="font-extrabold text-sm text-stone-900 dark:text-white">${c.recipe.name}</h5>
+            <p class="text-xs text-stone-500">${c.recipe.cuisine.toUpperCase()} • ${c.recipe.prepTime} mins</p>
+          </div>
+          <button onclick="toggleModal('aiDietModal', false); loadRecipeToScaler('${c.recipe.id}')" class="px-3 py-1.5 rounded-xl bg-paprika-600 hover:bg-paprika-700 text-white font-bold text-xs shadow-xs">
+            Scale in Kitchen Calc
+          </button>
+        `;
+        outContainer.appendChild(item);
+      });
+
+      document.getElementById('aiRecommendationsOutput').classList.remove('hidden');
+    }
+
+    // ==========================================
+    // THEMES & ACCESSIBILITY
+    // ==========================================
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('THEME_PREFERENCE', isDark ? 'dark' : 'light');
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('THEME_PREFERENCE');
+      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function setFontScale(scale) {
+      document.body.classList.remove('font-size-large', 'font-size-xlarge');
+      if (scale === 'large') document.body.classList.add('font-size-large');
+      if (scale === 'xlarge') document.body.classList.add('font-size-xlarge');
+      APP_STATE.accessibility.fontScale = scale;
+      saveStateToLocalStorage();
+      showToast(`Font scale set to ${scale}.`, 'info');
+    }
+
+    function toggleHighContrast() {
+      APP_STATE.accessibility.highContrast = !APP_STATE.accessibility.highContrast;
+      document.body.classList.toggle('high-contrast', APP_STATE.accessibility.highContrast);
+      document.getElementById('highContrastKnob').classList.toggle('translate-x-6', APP_STATE.accessibility.highContrast);
+      saveStateToLocalStorage();
+    }
+
+    function toggleFractionPreference() {
+      APP_STATE.accessibility.useFractions = !APP_STATE.accessibility.useFractions;
+      document.getElementById('fractionKnob').classList.toggle('translate-x-6', APP_STATE.accessibility.useFractions);
+      saveStateToLocalStorage();
+      if (APP_STATE.scaler.hasCalculated) renderScaledResults();
+      recalculateConverter();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Window Load Bootstrap
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadStateFromLocalStorage();
+
+      document.getElementById('recipeDishName').value = APP_STATE.scaler.dishName || '';
+      document.getElementById('originalServings').value = APP_STATE.scaler.originalServings || 4;
+      document.getElementById('desiredServings').value = APP_STATE.scaler.desiredServings || 8;
+
+      renderIngredientRows();
+
+      if (APP_STATE.scaler.hasCalculated && APP_STATE.scaler.lastScaledResults) {
+        renderScaledResults();
+      }
+
+      renderPantryView();
+      renderShoppingListView();
+      recalculateConverter();
+
+      setFontScale(APP_STATE.accessibility.fontScale || 'normal');
+      if (APP_STATE.accessibility.highContrast) {
+        document.body.classList.add('high-contrast');
+        document.getElementById('highContrastKnob')?.classList.add('translate-x-6');
+      }
+      if (!APP_STATE.accessibility.useFractions) {
+        document.getElementById('fractionKnob')?.classList.remove('translate-x-6');
+      }
+    });
+
+  </script>
+</body>
+</html>
